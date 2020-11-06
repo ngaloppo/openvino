@@ -3,22 +3,17 @@
 //
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#include <gtest/gtest.h>
-#include "api/memory.hpp"
-#include <api/input_layout.hpp>
-#include "api/activation.hpp"
-#include <api/topology.hpp>
-#include <api/tensor.hpp>
-#include <api/network.hpp>
-#include <api/engine.hpp>
-#include <api/data.hpp>
-#include "test_utils/test_utils.h"
+#include "test_utils.h"
+
+#include <cldnn/primitives/input_layout.hpp>
+#include <cldnn/primitives/activation.hpp>
+#include <cldnn/primitives/data.hpp>
 
 
 #include <cl2_wrapper.h>
 
 using namespace cldnn;
-using namespace tests;
+using namespace ::tests;
 
 typedef std::chrono::high_resolution_clock Time;
 typedef std::chrono::nanoseconds ns;

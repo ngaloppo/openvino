@@ -3,15 +3,13 @@
 //
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#include <api/topology.hpp>
-#include <api/network.hpp>
-#include <api/engine.hpp>
-#include <api/input_layout.hpp>
 #include "test_utils/test_utils.h"
-#include "api/arg_max_min.hpp"
+
+#include <cldnn/primitives/input_layout.hpp>
+#include <cldnn/primitives/arg_max_min.hpp>
 
 using namespace cldnn;
-using namespace tests;
+using namespace ::tests;
 using namespace std;
 
 // Run some topology too see if command queue does work correctly

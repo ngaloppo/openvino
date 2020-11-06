@@ -2,16 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <gtest/gtest.h>
-#include "api/engine.hpp"
-#include "test_utils/test_utils.h"
-#include "api/network.hpp"
-#include "api/topology.hpp"
-#include "api/input_layout.hpp"
-#include "api/activation.hpp"
-#include "api/cldnn.hpp"
-
 #include "test_utils.h"
+
+#include <cldnn/runtime/cldnn.hpp>
+
+#define CL_HPP_ENABLE_EXCEPTIONS
+#define CL_HPP_MINIMUM_OPENCL_VERSION 120
+#define CL_HPP_TARGET_OPENCL_VERSION 120
 
 #if defined __clang__
 #pragma clang diagnostic push

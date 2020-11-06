@@ -1,24 +1,18 @@
-﻿// Copyright (C) 2018-2021 Intel Corporation
+// Copyright (C) 2018-2021 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <gtest/gtest.h>
-#include "api/memory.hpp"
-#include "api/mutable_data.hpp"
-#include "api/input_layout.hpp"
-#include "api/lstm.hpp"
-#include "api/lstm_dynamic.hpp"
-#include "api/reorder.hpp"
-#include "api_extension/lstm_dynamic_input.hpp"
-#include "api_extension/lstm_dynamic_timeloop.hpp"
-#include "api/topology.hpp"
-#include "api/tensor.hpp"
-#include "api/network.hpp"
-#include "api/engine.hpp"
-#include "test_utils/test_utils.h"
-#include "api/data.hpp"
-#include "instrumentation.h"
-#include <test_utils/float16.h>
+#include "test_utils.h"
+
+#include <cldnn/primitives/mutable_data.hpp>
+#include <cldnn/primitives/input_layout.hpp>
+#include <cldnn/primitives/lstm.hpp>
+#include <cldnn/primitives/lstm_dynamic.hpp>
+#include <cldnn/primitives/reorder.hpp>
+#include <cldnn/primitives/data.hpp>
+#include <cldnn/primitives/lstm_dynamic_input.hpp>
+#include <cldnn/primitives/lstm_dynamic_timeloop.hpp>
+
 #include <chrono>
 #include <sstream>
 #include <iomanip>
@@ -28,7 +22,7 @@
 #define MEASURE_PERF false
 #define MEASURE_LOOP 50
 using namespace cldnn;
-using namespace tests;
+using namespace ::tests;
 
 namespace {
     float sigmoid(float x) {
@@ -474,7 +468,7 @@ struct lstm_dynamic_single_layer_test : public ::testing::Test
                         //check optional last hidden state output
                         if(has_last_hidden_state && len == dynamic_lengths[b] - 1)
                         {
-                            auto ratio = (float)ref_output_hidden[b][len][dir][x] / (float)last_hidden_ptr[i_lh++];                 
+                            auto ratio = (float)ref_output_hidden[b][len][dir][x] / (float)last_hidden_ptr[i_lh++];
                             EXPECT_TRUE(std::abs((1.0f - ratio) < 0.01f))
                             << "check has_last_hidden_state with ratio: " << ratio << ", "
                                 << "b:" << b << ", "
@@ -989,5 +983,3 @@ TEST(lstm_dynamic_negative, wrong_dynamic_length_size_1) {
         "recurrent"));
     ASSERT_ANY_THROW(network network(engine, topology));
 }
-
-

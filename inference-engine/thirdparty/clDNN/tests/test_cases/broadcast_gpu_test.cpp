@@ -3,17 +3,10 @@
 //
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#include <gtest/gtest.h>
+#include "test_utils.h"
 
-#include <api/engine.hpp>
-#include <api/input_layout.hpp>
-#include <api/memory.hpp>
-#include <api/broadcast.hpp>
-#include <api/topology.hpp>
-#include <api/network.hpp>
-
-#include "test_utils/test_utils.h"
-#include "test_utils/uniform_quantized_real_distribution.hpp"
+#include <cldnn/primitives/input_layout.hpp>
+#include <cldnn/primitives/broadcast.hpp>
 
 #include <cstddef>
 

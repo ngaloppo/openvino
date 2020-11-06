@@ -315,6 +315,8 @@ static int maxLineConsumption(const cv::GFluidKernel::Kind kind, int window, int
     case cv::GFluidKernel::Kind::YUV420toRGB: return inPort == 0 ? 2 : 1; break;
     default: GAPI_Assert(false); return 0;
     }
+
+    return 0;
 }
 
 static int borderSize(const cv::GFluidKernel::Kind kind, int window)

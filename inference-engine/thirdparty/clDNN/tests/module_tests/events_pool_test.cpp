@@ -2,11 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <gtest/gtest.h>
-#include "api/engine.hpp"
-#include "test_utils/test_utils.h"
-#include "api/input_layout.hpp"
-#include "api/network.hpp"
+#include "test_utils.h"
 
 using namespace tests;
 using namespace cldnn;
@@ -43,7 +39,7 @@ TEST(events_pool, DISABLED_basic_test)
             network network(eng, topology, bo);
             network.set_input_data("input", input);
             for(int k = 0; k < 20; k++) //and execute that network k times
-                network.execute();  
+                network.execute();
         }
         EXPECT_EQ(eng.get_max_used_device_memory_size(), (uint64_t)80);
         eng.~engine();

@@ -3,7 +3,6 @@
 //
 
 #include "detection_output_inst.h"
-#include "kernel.h"
 #include "network_impl.h"
 #include "implementation_map.h"
 #include "math_utils.h"
@@ -34,6 +33,10 @@ namespace {
 /************************ Detection Output CPU ************************/
 struct detection_output_cpu : typed_primitive_impl<detection_output> {
     const detection_output_node& outer;
+
+    std::unique_ptr<primitive_impl> clone() const override {
+        return make_unique<detection_output_cpu>(*this);
+    }
 
     explicit detection_output_cpu(const detection_output_node& outer) : outer(outer) {}
 
@@ -199,11 +202,11 @@ struct detection_output_cpu : typed_primitive_impl<detection_output> {
     }
 
     template <typename dtype>
-    void generate_detections(const detection_output_inst& instance,
+    void generate_detections(stream& stream, const detection_output_inst& instance,
                              const int num_of_images,
                              const std::vector<std::vector<std::vector<bounding_box>>>& all_bboxes,
                              std::vector<std::vector<std::vector<std::pair<float, int>>>>& confidences) {
-        mem_lock<dtype> lock{instance.output_memory()};
+        mem_lock<dtype> lock{instance.output_memory_ptr(), stream};
         auto out_ptr = lock.begin();
 
         const auto& args = instance.argument;
@@ -338,24 +341,25 @@ struct detection_output_cpu : typed_primitive_impl<detection_output> {
     }
 
     template <typename dtype>
-    void extract_locations_per_image(const detection_output_inst& instance,
+    void extract_locations_per_image(stream& stream, const detection_output_inst& instance,
                                      std::vector<std::vector<std::vector<bounding_box>>>& locations,
                                      const int num_of_priors,
                                      const int num_loc_classes) {
         const bool share_location = instance.argument.share_location;
-        auto& input_location = instance.location_memory();
+        auto input_location = instance.location_memory();
+        auto location_layout = input_location->get_layout();
         const int num_of_images = static_cast<int>(locations.size());
 
-        mem_lock<dtype> lock{input_location};
+        mem_lock<dtype> lock{input_location, stream};
         auto location_data = lock.begin();
 
-        assert(num_of_priors * num_loc_classes * PRIOR_BOX_SIZE == input_location.get_layout().size.feature[0]);
+        assert(num_of_priors * num_loc_classes * PRIOR_BOX_SIZE == location_layout.size.feature[0]);
 
-        const auto& input_buffer_size = input_location.get_layout().get_buffer_size();
+        const auto& input_buffer_size = location_layout.get_buffer_size();
         const int input_buffer_size_x = input_buffer_size.spatial[0];
         const int input_buffer_size_y = input_buffer_size.spatial[1];
         const int input_buffer_size_f = input_buffer_size.feature[0];
-        const auto& input_padding = input_location.get_layout().data_padding;
+        const auto& input_padding = location_layout.data_padding;
         const int input_padding_lower_x = input_padding.lower_size().spatial[0];
         const int input_padding_lower_y = input_padding.lower_size().spatial[1];
 
@@ -403,17 +407,17 @@ struct detection_output_cpu : typed_primitive_impl<detection_output> {
     }
 
     template <typename dtype>
-    void extract_prior_boxes_and_variances(const detection_output_inst& instance,
+    void extract_prior_boxes_and_variances(stream& stream, const detection_output_inst& instance,
                                            const bool variance_encoded_in_target,
                                            const int32_t prior_info_size,
                                            const int32_t prior_coordinates_offset,
                                            const int32_t images_count,
                                            std::vector<bounding_box>& prior_bboxes,
                                            std::vector<std::array<float, PRIOR_BOX_SIZE>>& prior_variances) {
-        auto& input_prior_box = instance.prior_box_memory();
+        auto input_prior_box = instance.prior_box_memory();
         const int num_of_priors = static_cast<int>(prior_bboxes.size()) / images_count;
 
-        mem_lock<dtype> lock{input_prior_box};
+        mem_lock<dtype> lock{input_prior_box, stream};
         for (int i = 0; i < images_count; i++) {
             auto prior_box_data =
                 lock.begin() + i * num_of_priors * prior_info_size * (variance_encoded_in_target ? 1 : 2);
@@ -434,25 +438,26 @@ struct detection_output_cpu : typed_primitive_impl<detection_output> {
     }
 
     template <typename dtype>
-    void extract_confidences_per_image(const detection_output_inst& instance,
+    void extract_confidences_per_image(stream& stream, const detection_output_inst& instance,
                                        std::vector<std::vector<std::vector<std::pair<float, int>>>>& confidences,
                                        const int num_of_priors) {
         const int num_classes = instance.argument.num_classes;
 
         const int num_of_images = static_cast<int>(confidences.size());
-        auto& input_confidence = instance.confidence_memory();
+        auto input_confidence = instance.confidence_memory();
         const float confidence_threshold = instance.argument.confidence_threshold;
+        auto confidence_layout = input_confidence->get_layout();
 
-        mem_lock<dtype> lock{(memory_impl::ptr) &input_confidence};
+        mem_lock<dtype> lock{input_confidence, stream};
         auto confidence_data = lock.begin();
 
-        assert(num_of_priors * num_classes == input_confidence.get_layout().size.feature[0]);
+        assert(num_of_priors * num_classes == confidence_layout.size.feature[0]);
 
-        const auto& input_buffer_size = input_confidence.get_layout().get_buffer_size();
+        const auto& input_buffer_size = confidence_layout.get_buffer_size();
         const int input_buffer_size_x = input_buffer_size.spatial[0];
         const int input_buffer_size_y = input_buffer_size.spatial[1];
         const int input_buffer_size_f = input_buffer_size.feature[0];
-        const auto& input_padding = input_confidence.get_layout().data_padding;
+        const auto& input_padding = confidence_layout.data_padding;
         const int input_padding_lower_x = input_padding.lower_size().spatial[0];
         const int input_padding_lower_y = input_padding.lower_size().spatial[1];
         const int stride = input_buffer_size_y * input_buffer_size_x;
@@ -524,30 +529,33 @@ struct detection_output_cpu : typed_primitive_impl<detection_output> {
     }
 
     template <typename dtype>
-    void prepare_data(const detection_output_inst& instance,
+    void prepare_data(stream& stream, const detection_output_inst& instance,
                       std::vector<std::vector<std::vector<bounding_box>>>& bboxes,
                       std::vector<std::vector<std::vector<std::pair<float, int>>>>& confidences) {
         assert(bboxes.size() == confidences.size());
 
         const auto& args = instance.argument;
 
+        auto priors_layout = instance.prior_box_memory()->get_layout();
+
         const int num_of_images = static_cast<int>(bboxes.size());
-        const int num_of_priors = instance.prior_box_memory().get_layout().size.spatial[1] / args.prior_info_size;
+        const int num_of_priors = priors_layout.size.spatial[1] / args.prior_info_size;
         const int num_loc_classes = args.share_location ? 1 : args.num_classes;
 
         // Extract locations per image.
         std::vector<std::vector<std::vector<bounding_box>>> locations(
             num_of_images);  // Per image : label -> bounding boxes.
-        extract_locations_per_image<dtype>(instance, locations, num_of_priors, num_loc_classes);
+        extract_locations_per_image<dtype>(stream, instance, locations, num_of_priors, num_loc_classes);
 
-        int32_t batches_in_prior_boxes = instance.prior_box_memory().get_layout().size.batch[0];
+        int32_t batches_in_prior_boxes = priors_layout.size.batch[0];
         std::vector<bounding_box> prior_bboxes(batches_in_prior_boxes *
                                                num_of_priors);  // Prior-Boxes (identical for all images since we assume
                                                                 // all images in a batch are of same dimension).
         std::vector<std::array<float, PRIOR_BOX_SIZE>> prior_variances(
             batches_in_prior_boxes * num_of_priors);  // Variances per prior-box (identical for all images since we
                                                       // assume all images in a batch are of same dimension).
-        extract_prior_boxes_and_variances<dtype>(instance,
+        extract_prior_boxes_and_variances<dtype>(stream,
+                                                 instance,
                                                  args.variance_encoded_in_target,
                                                  args.prior_info_size,
                                                  args.prior_coordinates_offset,
@@ -590,37 +598,37 @@ struct detection_output_cpu : typed_primitive_impl<detection_output> {
         }
 
         // Extract confidences per image.
-        extract_confidences_per_image<dtype>(instance, confidences, num_of_priors);
+        extract_confidences_per_image<dtype>(stream, instance, confidences, num_of_priors);
     }
 
-    event_impl::ptr execute_impl(const std::vector<event_impl::ptr>& events, detection_output_inst& instance) override {
+    event::ptr execute_impl(const std::vector<event::ptr>& events, detection_output_inst& instance) override {
         for (auto& a : events) {
             a->wait();
         }
 
-        auto ev = instance.get_network().get_engine().create_user_event(instance.get_network().get_id(), false);
+        auto& stream = instance.get_network().get_stream();
 
-        const int num_of_images = instance.location_memory().get_layout().size.batch[0];  // batch size
+        const int num_of_images = instance.location_memory()->get_layout().size.batch[0];  // batch size
 
         std::vector<std::vector<std::vector<bounding_box>>> bboxes(
             num_of_images);  // Per image : label -> decoded bounding boxes.
         std::vector<std::vector<std::vector<std::pair<float, int>>>> confidences(
             num_of_images);  // Per image : class -> confidences per bounding box.
 
-        if (instance.location_memory().get_layout().data_type == data_types::f32) {
-            prepare_data<data_type_to_type<data_types::f32>::type>(instance, bboxes, confidences);
+        if (instance.location_memory()->get_layout().data_type == data_types::f32) {
+            prepare_data<data_type_to_type<data_types::f32>::type>(stream, instance, bboxes, confidences);
 
-            generate_detections<data_type_to_type<data_types::f32>::type>(instance, num_of_images, bboxes, confidences);
+            generate_detections<data_type_to_type<data_types::f32>::type>(stream, instance, num_of_images, bboxes, confidences);
         } else {
-            prepare_data<data_type_to_type<data_types::f16>::type>(instance, bboxes, confidences);
+            prepare_data<data_type_to_type<data_types::f16>::type>(stream, instance, bboxes, confidences);
 
-            generate_detections<data_type_to_type<data_types::f16>::type>(instance, num_of_images, bboxes, confidences);
+            generate_detections<data_type_to_type<data_types::f16>::type>(stream, instance, num_of_images, bboxes, confidences);
         }
 
-        dynamic_cast<cldnn::user_event*>(ev.get())->set();  // set as complete
-        // TODO: consider refactoring create_user_event() to return cldnn::user_event*
-        return ev;
+        return stream.create_user_event(true);
     }
+
+    void init_kernels() override {}
 
     static primitive_impl* create(const detection_output_node& arg) { return new detection_output_cpu(arg); }
 };

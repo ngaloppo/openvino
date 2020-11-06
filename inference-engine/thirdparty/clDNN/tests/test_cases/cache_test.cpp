@@ -3,17 +3,11 @@
 //
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#include <gtest/gtest.h>
-
 #include "test_utils.h"
 
-#include <api/engine.hpp>
-#include <api/program.hpp>
-#include <api/topology.hpp>
-#include <api/network.hpp>
-#include <api/input_layout.hpp>
-#include <api/convolution.hpp>
-#include <api/data.hpp>
+#include <cldnn/primitives/input_layout.hpp>
+#include <cldnn/primitives/convolution.hpp>
+#include <cldnn/primitives/data.hpp>
 
 #include <iostream>
 #include <fstream>

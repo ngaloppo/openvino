@@ -2,14 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <memory>
+#include "test_utils.h"
 
-#include <gtest/gtest.h>
+#include "cldnn/runtime/engine.hpp"
+#include "cldnn/runtime/memory.hpp"
+#include "runtime/ocl/ocl_stream.hpp"
+#include "runtime/ocl/ocl_memory.hpp"
+#include "runtime/ocl/ocl_common.hpp"
+#include "runtime/ocl/ocl_base_event.hpp"
 
 #include "program_impl.h"
 #include "topology_impl.h"
-#include "engine_impl.h"
-#include "memory_impl.h"
 #include "data_inst.h"
 #include "activation_inst.h"
 #include "convolution_inst.h"
@@ -17,14 +20,9 @@
 #include "network_impl.h"
 #include "reshape_inst.h"
 #include "pass_manager.h"
-#include "api/engine.hpp"
-#include "test_utils.h"
 #include "program_impl_wrapper.h"
-#include "gpu/ocl_queue_wrapper.h"
-#include "gpu/memory_gpu.h"
-#include "gpu/ocl_toolkit.h"
-#include "gpu/command_queues_builder.h"
-#include "gpu/ocl_base_event.h"
+
+#include <memory>
 
 using namespace cldnn;
 using namespace ::tests;

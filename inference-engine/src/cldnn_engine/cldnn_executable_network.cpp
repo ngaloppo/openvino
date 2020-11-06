@@ -2,31 +2,30 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <list>
-#include <set>
-#include <unordered_set>
 
 #include "ie_metric_helpers.hpp"
-#include <api/cldnn.hpp>
-#include <api/data.hpp>
 #include <chrono>
 #include <cmath>
 #include <algorithm>
-#include "cldnn_graph.h"
-#include "cldnn_itt.h"
 
-#include <description_buffer.hpp>
 #include <cldnn/cldnn_config.hpp>
-#include "cldnn_infer_request.h"
-#include <threading/ie_executor_manager.hpp>
-#include "cldnn_async_infer_request.h"
-#include <fstream>
-#include <utility>
-#include <sys/types.h>
-
-#include "cldnn_executable_network.h"
+#include <description_buffer.hpp>
+#include "threading/ie_executor_manager.hpp"
 #include "threading/ie_cpu_streams_executor.hpp"
 #include "cpp_interfaces/interface/ie_iinfer_request_internal.hpp"
+
+#include "cldnn_itt.h"
+#include "cldnn_graph.h"
+#include "cldnn_infer_request.h"
+#include "cldnn_async_infer_request.h"
+#include "cldnn_executable_network.h"
+
+#include <fstream>
+#include <list>
+#include <set>
+#include <unordered_set>
+#include <utility>
+#include <sys/types.h>
 
 
 using namespace InferenceEngine;

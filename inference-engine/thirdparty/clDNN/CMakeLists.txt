@@ -7,7 +7,11 @@ include(CheckCXXCompilerFlag)
 
 # Register Intel helper modules.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/utils/build/cmake/modules")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(IntelHelpers)
+
+set(ENABLE_SYCL ON CACHE STRING ""  FORCE)
+include("cmake/SYCL.cmake")
 
 
 # ======================================================================================================
@@ -371,10 +375,31 @@ endif()
 
 # ======================================================================================================
 
-set(CLDNN__OCL_ICD_ROOT "${CLDNN__OCL_ICD_DIR}" CACHE INTERNAL "Path to Khronos OpenCL ICD Loader used to build clDNN framework.")
-set(CLDNN__OCL_ICD_INCDIRS "${CLDNN__KHR_CLHPP_DIR}" CACHE INTERNAL "Paths to interface headers for OpenCL.")
-set(CLDNN__OCL_ICD_STLDIRS "${CLDNN__OCL_ICD_ROOT}/${__CLDNN_TargetOs}/${CLDNN__TARGET_CFG_VAR}/lib/${__CLDNN_TargetCpuDir}" CACHE INTERNAL "Paths to static libraries for OpenCL ICD Loader.")
-set(CLDNN__OCL_ICD_SHLDIRS "${CLDNN__OCL_ICD_ROOT}/${__CLDNN_TargetOs}/${CLDNN__TARGET_CFG_VAR}/bin/${__CLDNN_TargetCpuDir}" CACHE INTERNAL "Paths to shared libraries for OpenCL ICD Loader.")
+
+if (OpenCL_FOUND)
+  set(CLDNN__OCL_ICD_INCDIRS "${OpenCL_INCLUDE_DIR}" CACHE INTERNAL "Paths to interface headers for OpenCL.")
+  set(CLDNN__OCL_ICD_STLDIRS "${OpenCL_LIBRARY}" CACHE INTERNAL "Paths to static libraries for OpenCL ICD Loader.")
+  set(CLDNN__OCL_ICD_SHLDIRS "${OpenCL_LIBRARY}" CACHE INTERNAL "Paths to shared libraries for OpenCL ICD Loader.")
+  include_directories(SYSTEM "${CLDNN__KHR_CLHPP_DIR}"
+                             "${OpenCL_INCLUDE_DIR}")
+  add_library(clDNN_OpenCL UNKNOWN IMPORTED)
+  set_target_properties(clDNN_OpenCL
+      PROPERTIES
+          IMPORTED_LOCATION ${OpenCL_LIBRARY}
+  )
+else()
+  set(CLDNN__OCL_ICD_ROOT "${CLDNN__OCL_ICD_DIR}" CACHE INTERNAL "Path to Khronos OpenCL ICD Loader used to build clDNN framework.")
+  set(CLDNN__OCL_ICD_INCDIRS "${CLDNN__KHR_CLHPP_DIR}" CACHE INTERNAL "Paths to interface headers for OpenCL.")
+  set(CLDNN__OCL_ICD_STLDIRS "${CLDNN__OCL_ICD_ROOT}/${__CLDNN_TargetOs}/${CLDNN__TARGET_CFG_VAR}/lib/${__CLDNN_TargetCpuDir}" CACHE INTERNAL "Paths to static libraries for OpenCL ICD Loader.")
+  set(CLDNN__OCL_ICD_SHLDIRS "${CLDNN__OCL_ICD_ROOT}/${__CLDNN_TargetOs}/${CLDNN__TARGET_CFG_VAR}/bin/${__CLDNN_TargetCpuDir}" CACHE INTERNAL "Paths to shared libraries for OpenCL ICD Loader.")
+  include_directories(SYSTEM "${CLDNN__KHR_CLHPP_DIR}")
+
+  add_library(clDNN_OpenCL UNKNOWN IMPORTED)
+  set_target_properties(clDNN_OpenCL
+      PROPERTIES
+          IMPORTED_LOCATION ${CLDNN__OCL_ICD_LIBPATH}
+    )
+endif()
 
 # Select link directory based on targeted OS.
 # - on Windows: static libraries directory.
@@ -678,7 +703,7 @@ if((CMAKE_C_COMPILER_ID MATCHES "^Clang$") OR (CMAKE_CXX_COMPILER_ID MATCHES "^C
       CMAKE_CXX_FLAGS
       ALL_PATTERN ""
       SET_RAW
-        -stdlib=libc++
+        -stdlib=libstdc++
     )
 endif()
 
@@ -737,7 +762,8 @@ if((CMAKE_C_COMPILER_ID MATCHES "^Clang$") OR (CMAKE_CXX_COMPILER_ID MATCHES "^C
         -Wl,-headerpad_max_install_names
     )
 
-  list(APPEND CLDNN__SYSTEM_LINK_LIBRARIES "c++" "c++abi" "dl")
+  # list(APPEND CLDNN__SYSTEM_LINK_LIBRARIES "c++" "c++abi" "dl")
+  list(APPEND CLDNN__SYSTEM_LINK_LIBRARIES "dl" ${EXTRA_SHARED_LIBS})
   if(NOT ANDROID)
     list(APPEND CLDNN__SYSTEM_LINK_LIBRARIES "supc++")
   endif()
@@ -781,22 +807,13 @@ set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS
 include_directories(
     ${CLDNN_UTILS__RAPIDJSON_INCDIRS}
     "${CLDNN__CODEGEN_INCDIR}"
+    "${CLDNN__API_DIR}"
   )
-
-include_directories(SYSTEM
-   "${CLDNN__KHR_CLHPP_DIR}"
-  )
-
-add_library(clDNN_OpenCL UNKNOWN IMPORTED)
-set_target_properties(clDNN_OpenCL
-    PROPERTIES
-        IMPORTED_LOCATION ${CLDNN__OCL_ICD_LIBPATH}
-  )
-
 
 # =================================== Link targets and dependencies ====================================
 if(CLDNN__INCLUDE_CORE)
   add_subdirectory(src)
+  add_subdirectory(runtime)
   add_subdirectory(api_test_builds)
 endif()
 if(CLDNN__INCLUDE_TESTS)

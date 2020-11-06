@@ -3,22 +3,16 @@
 //
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#include <gtest/gtest.h>
-#include "api/memory.hpp"
-#include <api/input_layout.hpp>
-#include "api/lstm.hpp"
-#include <api/split.hpp>
-#include <api/crop.hpp>
-#include <api/reshape.hpp>
-#include <api/concatenation.hpp>
-#include <api/topology.hpp>
-#include <api/tensor.hpp>
-#include <api/network.hpp>
-#include <api/engine.hpp>
-#include "test_utils/test_utils.h"
-#include <api/data.hpp>
-#include "instrumentation.h"
-#include <test_utils/float16.h>
+
+#include "test_utils.h"
+
+#include <cldnn/primitives/input_layout.hpp>
+#include <cldnn/primitives/lstm.hpp>
+#include <cldnn/primitives/split.hpp>
+#include <cldnn/primitives/crop.hpp>
+#include <cldnn/primitives/reshape.hpp>
+#include <cldnn/primitives/concatenation.hpp>
+#include <cldnn/primitives/data.hpp>
 
 #include <sstream>
 #include <iomanip>
@@ -28,7 +22,7 @@
 #endif
 
 using namespace cldnn;
-using namespace tests;
+using namespace ::tests;
 
 #define FERROR 1E-4
 
@@ -2049,4 +2043,3 @@ TEST(lstm_gpu, generic_lstm_stacked_bi_f16) {
 // integration testing using multi-layer and chained LSTMs
 // LSTMs single input
 // optional activation list
-

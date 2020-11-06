@@ -3,21 +3,15 @@
 //
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#include <gtest/gtest.h>
 
-#include <api/engine.hpp>
-#include <api/input_layout.hpp>
-#include <api/pyramid_roi_align.hpp>
-#include <api/memory.hpp>
-#include <api/topology.hpp>
-#include <api/network.hpp>
-#include <api/mutable_data.hpp>
-#include <api/data.hpp>
+#include "test_utils.h"
 
-#include "test_utils/test_utils.h"
+#include <cldnn/primitives/input_layout.hpp>
+#include <cldnn/primitives/pyramid_roi_align.hpp>
+#include <cldnn/primitives/data.hpp>
 
 using namespace cldnn;
-using namespace tests;
+using namespace ::tests;
 
 template <typename T>
 struct pyramid_roi_align_typed_test : testing::Test {

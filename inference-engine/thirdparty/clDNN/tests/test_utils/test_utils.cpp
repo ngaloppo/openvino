@@ -4,13 +4,6 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "api/memory.hpp"
-#include <api/primitive.hpp>
-#include <api/input_layout.hpp>
-#include <api/data.hpp>
-#include <api/topology.hpp>
-#include <api/network.hpp>
-#include <api/engine.hpp>
 #include "test_utils.h"
 #include "float16.h"
 #include "instrumentation.h"

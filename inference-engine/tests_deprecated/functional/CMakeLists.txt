@@ -11,9 +11,9 @@ if (ENABLE_MYRIAD)
     add_subdirectory(vpu)
 endif()
 
-if (ENABLE_CLDNN)
-    add_subdirectory(cldnn)
-endif()
+# if (ENABLE_CLDNN)
+#     add_subdirectory(cldnn)
+# endif()
 
 if (ENABLE_GNA)
     add_subdirectory(gna)

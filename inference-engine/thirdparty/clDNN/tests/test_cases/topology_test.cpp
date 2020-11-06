@@ -2,25 +2,23 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <gtest/gtest.h>
-#include <api/topology.hpp>
-#include <api/network.hpp>
-#include <api/engine.hpp>
-#include "test_utils/test_utils.h"
+#include "test_utils.h"
+
+#include <cldnn/primitives/lrn.hpp>
+#include <cldnn/primitives/convolution.hpp>
+#include <cldnn/primitives/fully_connected.hpp>
+#include <cldnn/primitives/pooling.hpp>
+#include <cldnn/primitives/data.hpp>
+#include <cldnn/primitives/reorder.hpp>
+#include <cldnn/primitives/scale.hpp>
+#include <cldnn/primitives/eltwise.hpp>
+#include <cldnn/primitives/softmax.hpp>
+#include <cldnn/primitives/activation.hpp>
+#include <cldnn/primitives/concatenation.hpp>
+
 #include <include/topology_impl.h>
+
 #include <iostream>
-#include "api/memory.hpp"
-#include <api/lrn.hpp>
-#include <api/convolution.hpp>
-#include <api/fully_connected.hpp>
-#include <api/pooling.hpp>
-#include <api/data.hpp>
-#include <api/reorder.hpp>
-#include <api/scale.hpp>
-#include <api/eltwise.hpp>
-#include <api/softmax.hpp>
-#include <api/activation.hpp>
-#include <api/concatenation.hpp>
 #include <deque>
 #include <set>
 

@@ -3,17 +3,10 @@
 //
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-#include <gtest/gtest.h>
+#include "test_utils.h"
 
-#include <api/engine.hpp>
-#include <api/input_layout.hpp>
-#include <api/memory.hpp>
-#include <api/border.hpp>
-#include <api/topology.hpp>
-#include <api/network.hpp>
-
-#include "test_utils/test_utils.h"
-#include "test_utils/uniform_quantized_real_distribution.hpp"
+#include <cldnn/primitives/input_layout.hpp>
+#include <cldnn/primitives/border.hpp>
 
 #include <cstddef>
 
@@ -26,7 +19,7 @@ static std::vector<T> generate_rnd_real_input(
     const T min = static_cast<T>(0), const T max = static_cast<T>(1), const unsigned rnd_bits = 9)
 {
     static std::default_random_engine rnd_gen(random_seed);
-    cldnn::tests::distributions::uniform_quantized_real_distribution<T> rnd_dist(min, max, rnd_bits);
+    tests::distributions::uniform_quantized_real_distribution<T> rnd_dist(min, max, rnd_bits);
 
     auto acum = std::accumulate(sizes.begin(), sizes.end(), static_cast<std::size_t>(1), std::multiplies<std::size_t>());
 
@@ -847,26 +840,26 @@ TEST(border_gpu, basic_bfwzyx_0x0x0x0x1x1_0x0x0x0x1x1_border_mirror_101) {
         1, -2,  3,  -4,
         5,  6,  7,   8,
 
-        2, -3,  4,  -5, 
+        2, -3,  4,  -5,
         15,  4,  4,   4,
 
         2, -6,  13,  -14,
-        3,  7,  7,   7, 
+        3,  7,  7,   7,
     };
     std::vector<float> out_data = {
-        2, -3,  4,  -5, 
+        2, -3,  4,  -5,
         15,  4,  4,   4,
 
         1, -2,  3,  -4,
         5,  6,  7,   8,
 
-        2, -3,  4,  -5, 
-        15,  4,  4,   4, 
+        2, -3,  4,  -5,
+        15,  4,  4,   4,
 
-        2, -6,  13,  -14, 
+        2, -6,  13,  -14,
         3,  7,  7,   7,
 
-        2, -3,  4,  -5, 
+        2, -3,  4,  -5,
         15,  4,  4,   4,
     };
     set_values(input, input_data);

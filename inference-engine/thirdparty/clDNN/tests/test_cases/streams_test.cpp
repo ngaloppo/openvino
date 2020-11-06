@@ -2,16 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <gtest/gtest.h>
-#include <api/tensor.hpp>
-#include <api/engine.hpp>
-#include <api/memory.hpp>
-#include <api/input_layout.hpp>
-#include <api/data.hpp>
-#include "test_utils/test_utils.h"
+#include "test_utils.h"
+
+#include <cldnn/primitives/input_layout.hpp>
+#include <cldnn/primitives/data.hpp>
 
 using namespace cldnn;
-using namespace tests;
+using namespace ::tests;
 
 static engine_configuration streams_config(false,
                                                  false,

@@ -124,7 +124,9 @@ source_group("${__CLDNN_Label__cg_cache}"         FILES ${__CLDNN_Sources__cg_ca
 # ===================================== Include/Link directories =======================================
 
 include_directories(
+    "${CLDNN__MAIN_DIR}"
     "${__CLDNN_Directory__main}"
+    "${CLDNN__MAIN_DIR}/runtime/include"
     "${__CLDNN_Directory__core}"
     "${__CLDNN_Directory__core}/common"
     "${__CLDNN_Directory__core}/cache"

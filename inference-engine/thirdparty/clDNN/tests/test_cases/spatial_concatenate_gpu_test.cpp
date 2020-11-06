@@ -4,17 +4,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include <gtest/gtest.h>
-#include "api/memory.hpp"
-#include <api/input_layout.hpp>
-#include "api/concatenation.hpp"
-#include <api/topology.hpp>
-#include <api/network.hpp>
-#include <api/engine.hpp>
-#include "test_utils/test_utils.h"
+#include "test_utils.h"
+
+#include <cldnn/primitives/input_layout.hpp>
+#include "cldnn/primitives/concatenation.hpp"
 
 using namespace cldnn;
-using namespace tests;
+using namespace ::tests;
 
 TEST(spatial_concatenate_f32_gpu, test01) {
     engine eng;

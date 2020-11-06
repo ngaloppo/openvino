@@ -2,19 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <gtest/gtest.h>
-#include "api/memory.hpp"
-#include <api/input_layout.hpp>
-#include "api/arg_max_min.hpp"
-#include <api/topology.hpp>
-#include <api/network.hpp>
-#include <api/engine.hpp>
-#include <api/mutable_data.hpp>
-#include <api/data.hpp>
-#include "test_utils/test_utils.h"
+#include "test_utils.h"
+
+#include <cldnn/primitives/arg_max_min.hpp>
+#include <cldnn/primitives/mutable_data.hpp>
+#include <cldnn/primitives/data.hpp>
+#include <cldnn/primitives/input_layout.hpp>
 
 using namespace cldnn;
-using namespace tests;
+using namespace ::tests;
 
 template <typename Tin, typename Tout>
 void generic_arg_max_test_xyf(int input_b, int input_f, int input_y, int input_x, arg_max_min::out_type mode, bool expect_throw = false)

@@ -2,20 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <memory>
+#include "test_utils.h"
 
-#include <gtest/gtest.h>
+#include "runtime/engine.h"
 
 #include "program_impl.h"
 #include "data_inst.h"
-#include "engine_impl.h"
 #include "eltwise_inst.h"
 #include "network_impl.h"
 #include "pass_manager.h"
 #include "to_string_utils.h"
 
-#include "test_utils.h"
 #include "program_impl_wrapper.h"
+
+#include <memory>
 
 using namespace cldnn;
 using namespace ::tests;

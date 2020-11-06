@@ -2,43 +2,34 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-#include <gtest/gtest.h>
-#include "api/memory.hpp"
-#include "api/input_layout.hpp"
-#include "api/convolution.hpp"
-#include "api/quantize.hpp"
-#include "api/topology.hpp"
-#include "api/tensor.hpp"
-#include "api/network.hpp"
-#include "api/eltwise.hpp"
-#include "api/fully_connected.hpp"
-#include "api/gemm.hpp"
-#include "api/binary_convolution.hpp"
-#include "api/engine.hpp"
-#include "api/data.hpp"
-#include "api/resample.hpp"
-#include "api/mvn.hpp"
-#include "api/deconvolution.hpp"
-#include "api/permute.hpp"
-#include "api/gather.hpp"
-#include "api/gather_nd.hpp"
-#include "api/scatter_update.hpp"
-#include "api/scatter_nd_update.hpp"
-#include "api/scatter_elements_update.hpp"
-#include "api/depth_to_space.hpp"
-#include "api/space_to_depth.hpp"
-#include "api/batch_to_space.hpp"
-#include "api/space_to_batch.hpp"
-#include "api/reduce.hpp"
+#include "test_utils.h"
 
-
-#include "test_utils/test_utils.h"
+#include <cldnn/primitives/input_layout.hpp>
+#include <cldnn/primitives/convolution.hpp>
+#include <cldnn/primitives/quantize.hpp>
+#include <cldnn/primitives/eltwise.hpp>
+#include <cldnn/primitives/fully_connected.hpp>
+#include <cldnn/primitives/gemm.hpp>
+#include <cldnn/primitives/binary_convolution.hpp>
+#include <cldnn/primitives/data.hpp>
+#include <cldnn/primitives/resample.hpp>
+#include <cldnn/primitives/mvn.hpp>
+#include <cldnn/primitives/deconvolution.hpp>
+#include <cldnn/primitives/permute.hpp>
+#include <cldnn/primitives/gather.hpp>
+#include <cldnn/primitives/scatter_update.hpp>
+#include <cldnn/primitives/scatter_nd_update.hpp>
+#include <cldnn/primitives/scatter_elements_update.hpp>
+#include <cldnn/primitives/depth_to_space.hpp>
+#include <cldnn/primitives/space_to_depth.hpp>
+#include <cldnn/primitives/batch_to_space.hpp>
+#include <cldnn/primitives/space_to_batch.hpp>
+#include <cldnn/primitives/reduce.hpp>
 
 #include <cmath>
 
 using namespace cldnn;
-using namespace tests;
+using namespace ::tests;
 
 struct resample_test_params {
     tensor in_shape;
@@ -8131,4 +8122,3 @@ INSTANTIATE_TEST_CASE_P(fusings_gpu, gather_nd_activation_scale_eltwise,
         gather_nd_test_params{ CASE_GATHER_ND_FP32_6D_3, 2, 5 },
         gather_nd_test_params{ CASE_GATHER_ND_FP32_6D_4, 2, 5 },
 }), );
-

@@ -2,18 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <gtest/gtest.h>
-#include "api/memory.hpp"
-#include <api/input_layout.hpp>
-#include "api/softmax.hpp"
-#include <api/topology.hpp>
-#include <api/network.hpp>
-#include <api/engine.hpp>
-#include "test_utils/test_utils.h"
+#include "test_utils.h"
+
+#include <cldnn/primitives/input_layout.hpp>
+#include <cldnn/primitives/softmax.hpp>
 
 using namespace cldnn;
 using namespace std;
-using namespace tests;
+using namespace ::tests;
 
 class softmax_gpu_xb_f32_test_fixture: public ::testing::Test {
 public:
@@ -1008,4 +1004,3 @@ INSTANTIATE_TEST_CASE_P(DISABLED_SOFTMAX,
     softmax_test,
     ::testing::Combine(::testing::ValuesIn(softmax_test::generate_generic_test_params()), ::testing::ValuesIn(softmax_test::generate_specific_test_params())),
     softmax_test::custom_param_name);
-

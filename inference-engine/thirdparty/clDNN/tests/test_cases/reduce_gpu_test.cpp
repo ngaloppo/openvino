@@ -2,20 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-#include <gtest/gtest.h>
-#include <api/input_layout.hpp>
-#include "api/reduce.hpp"
-#include <api/topology.hpp>
-#include <api/network.hpp>
-#include <api/engine.hpp>
-#include "test_utils/test_utils.h"
-#include <api/data.hpp>
-#include "test_utils/float16.h"
+#include "test_utils.h"
+
+#include <cldnn/primitives/input_layout.hpp>
+#include <cldnn/primitives/reduce.hpp>
+#include <cldnn/primitives/data.hpp>
+
 #include <cmath>
 #include <algorithm>
 
 using namespace cldnn;
-using namespace tests;
+using namespace ::tests;
 
 template <typename InputT>
 struct accumulator_type {

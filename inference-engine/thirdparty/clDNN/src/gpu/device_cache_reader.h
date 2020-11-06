@@ -3,8 +3,8 @@
 //
 
 #pragma once
-#include <memory>
 #include "document.h"
+#include <memory>
 #include <string>
 
 namespace kernel_selector {
