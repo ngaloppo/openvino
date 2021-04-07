@@ -93,7 +93,9 @@ protected:
     std::unique_ptr<memory_pool> _memory_pool;
 };
 
+#ifdef CLDNN_WITH_SYCL
 std::shared_ptr<cldnn::engine> create_sycl_engine(const device::ptr device, runtime_types runtime_type, const engine_configuration& configuration);
+#endif
 std::shared_ptr<cldnn::engine> create_ocl_engine(const device::ptr device, runtime_types runtime_type, const engine_configuration& configuration);
 
 }  // namespace cldnn

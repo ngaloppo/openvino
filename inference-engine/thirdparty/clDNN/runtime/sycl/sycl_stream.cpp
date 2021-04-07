@@ -1,25 +1,9 @@
-/*
-// Copyright (c) 2021 Intel Corporation
+// Copyright (C) 2021 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-*/
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "sycl_stream.hpp"
 #include "sycl_event.hpp"
-// #include "sycl_user_event.hpp"
-// #include "sycl_events_pool.hpp"
 #include "sycl_kernel.hpp"
 #include "sycl_common.hpp"
 
@@ -50,23 +34,7 @@ inline cl::sycl::nd_range<3> toNDRange(const work_group_sizes& range) {
 }  // namespace
 
 sycl_stream::sycl_stream(const sycl_engine& engine) : _engine(engine) {
-    // auto context = engine.get_cl_context();
-    // auto device = engine.get_cl_device();
-    // auto config = engine.configuration();
-    // gpu::command_queues_builder queue_builder(context, device);
-    // queue_builder.set_profiling(config.enable_profiling);
-    // queue_builder.set_out_of_order((config.use_out_of_order_queue));
-
-    // bool priorty_extensions = engine.extension_supported("cl_khr_priority_hints") && engine.extension_supported("cl_khr_create_command_queue");
-    // queue_builder.set_priority_mode(config.priority_mode, priorty_extensions);
-
-    // bool throttle_extensions = engine.extension_supported("cl_khr_throttle_hints") && engine.extension_supported("cl_khr_create_command_queue");
-    // queue_builder.set_throttle_mode(config.throttle_mode, throttle_extensions);
-
-    // queue_builder.build();
-
     _command_queue = cl::sycl::queue(engine.get_sycl_context(), engine.get_sycl_device());
-    // _events_pool.reset(new events_pool());
 }
 
 void sycl_stream::set_arguments(kernel& /* kernel */, const kernel_arguments_desc& /* args_desc */, const kernel_arguments_data& /* args */) {

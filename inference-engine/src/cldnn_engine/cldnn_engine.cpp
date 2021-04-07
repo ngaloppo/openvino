@@ -412,7 +412,7 @@ clDNNEngine::clDNNEngine() : m_defaultContext(nullptr) {
     // try loading clDNN engine and get info from it
     {
         // Set OCL runtime which should be always available
-        cldnn::device_query device_query(cldnn::runtime_types::ocl);
+        cldnn::device_query device_query(cldnn::engine_types::ocl, cldnn::runtime_types::ocl);
         device_map = device_query.get_available_devices();
     }
     // locate global custom kernel config

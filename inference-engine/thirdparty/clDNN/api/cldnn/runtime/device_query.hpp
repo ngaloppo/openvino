@@ -16,7 +16,7 @@ namespace cldnn {
 
 struct device_query {
 public:
-    explicit device_query(runtime_types runtime_type, void* user_context = nullptr, void* user_device = nullptr);
+    explicit device_query(engine_types engine_type, runtime_types runtime_type, void* user_context = nullptr, void* user_device = nullptr);
 
     std::map<std::string, device::ptr> get_available_devices() const {
         return _available_devices;

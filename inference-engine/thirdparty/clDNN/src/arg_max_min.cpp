@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "arg_max_min_inst.h"
 #include "primitive_type_base.h"
 #include "sliding_window_utils.h"

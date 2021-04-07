@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 #include "ocl_command_queues_builder.hpp"
 #include "cldnn/runtime/error_handler.hpp"
 #include <string>

@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "ocl_device_detector.hpp"
 #include "ocl_device.hpp"
+#include "ocl_common.hpp"
 
 #include <string>
 #include <vector>
@@ -20,6 +20,27 @@
 #pragma GCC diagnostic ignored "-Wignored-attributes"
 #endif
 
+namespace {
+bool does_device_match_config(bool out_of_order, const cl::Device& device) {
+// Is it intel gpu
+if (device.getInfo<CL_DEVICE_TYPE>() != CL_DEVICE_TYPE_GPU ||
+    device.getInfo<CL_DEVICE_VENDOR_ID>() != 0x8086) {
+    return false;
+}
+
+// Does device support OOOQ?
+if (out_of_order) {
+    auto queue_properties = device.getInfo<CL_DEVICE_QUEUE_PROPERTIES>();
+    using cmp_t = std::common_type<decltype(queue_properties),
+        typename std::underlying_type<cl::QueueProperties>::type>::type;
+    if (!(static_cast<cmp_t>(queue_properties) & static_cast<cmp_t>(cl::QueueProperties::OutOfOrder))) {
+        return false;
+    }
+}
+
+return true;
+}
+}  // namespace
 namespace cldnn {
 namespace gpu {
 static constexpr auto INTEL_PLATFORM_VENDOR = "Intel(R) Corporation";
@@ -213,26 +234,6 @@ std::vector<device::ptr>  ocl_device_detector::create_device_list_from_user_devi
         throw std::runtime_error("[CLDNN ERROR]. No corresponding GPU device was found.");
     }
     return ret;
-}
-
-bool ocl_device_detector::does_device_match_config(bool out_of_order, const cl::Device& device) const {
-    // Is it intel gpu
-    if (device.getInfo<CL_DEVICE_TYPE>() != dev_type ||
-        device.getInfo<CL_DEVICE_VENDOR_ID>() != dev_vendor) {
-        return false;
-    }
-
-    // Does device support OOOQ?
-    if (out_of_order) {
-        auto queue_properties = device.getInfo<CL_DEVICE_QUEUE_PROPERTIES>();
-        using cmp_t = std::common_type<decltype(queue_properties),
-            typename std::underlying_type<cl::QueueProperties>::type>::type;
-        if (!(static_cast<cmp_t>(queue_properties) & static_cast<cmp_t>(cl::QueueProperties::OutOfOrder))) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 }  // namespace gpu

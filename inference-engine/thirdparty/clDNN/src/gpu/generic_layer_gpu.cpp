@@ -30,7 +30,10 @@ struct generic_layer_gpu : typed_primitive_impl<generic_layer> {
     , _cl_kernel_data(other._cl_kernel_data)
     , _kernels({})
     , _kernel_id(other._kernel_id) {
-        _kernels.emplace_back(other._kernels.front()->clone());
+        if (other._kernels.empty()) {
+            throw std::runtime_error("Can't copy generic_layer_gpu node: kernels vector is empty");
+        }
+        _kernels.push_back(other._kernels.front()->clone());
     }
 
     generic_layer_gpu(const generic_layer_node& arg)
@@ -41,7 +44,7 @@ struct generic_layer_gpu : typed_primitive_impl<generic_layer> {
     }
 
     void init_kernels() override {
-        _kernels.emplace_back(std::move(outer.get_program().get_kernel(_kernel_id)));
+        _kernels.push_back(outer.get_program().get_kernel(_kernel_id));
     }
 
     void set_arguments_impl(generic_layer_inst& instance) override {

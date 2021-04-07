@@ -11,7 +11,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(IntelHelpers)
 
 # TODO: Provide user option to control gpu engine type
-set(ENABLE_SYCL OFF CACHE STRING ""  FORCE)
+set(ENABLE_SYCL ON CACHE STRING ""  FORCE)
 if (ENABLE_SYCL)
   include("cmake/SYCL.cmake")
   add_definitions(-DCLDNN_WITH_SYCL=1)
@@ -396,6 +396,7 @@ else()
   set(CLDNN__OCL_ICD_INCDIRS "${CLDNN__KHR_CLHPP_DIR}" CACHE INTERNAL "Paths to interface headers for OpenCL.")
   set(CLDNN__OCL_ICD_STLDIRS "${CLDNN__OCL_ICD_ROOT}/${__CLDNN_TargetOs}/${CLDNN__TARGET_CFG_VAR}/lib/${__CLDNN_TargetCpuDir}" CACHE INTERNAL "Paths to static libraries for OpenCL ICD Loader.")
   set(CLDNN__OCL_ICD_SHLDIRS "${CLDNN__OCL_ICD_ROOT}/${__CLDNN_TargetOs}/${CLDNN__TARGET_CFG_VAR}/bin/${__CLDNN_TargetCpuDir}" CACHE INTERNAL "Paths to shared libraries for OpenCL ICD Loader.")
+  set(OpenCL_LIBRARY "${CLDNN__OCL_ICD_LIBPATH}" CACHE INTERNAL "Paths to shared libraries for OpenCL ICD Loader.")
   include_directories(SYSTEM "${CLDNN__KHR_CLHPP_DIR}")
 
   add_library(clDNN_OpenCL UNKNOWN IMPORTED)

@@ -370,11 +370,10 @@ void kernels_cache::build_batch(const batch_program& batch) {
             for (auto& k : kernels) {
                 const auto& entry_point = k.getInfo<CL_KERNEL_FUNCTION_NAME>();
                 const auto& k_id = batch.entry_point_to_id.find(entry_point);
-                const auto& k_type = kernel_type(k, _engine.get_device_info().supports_usm);
                 if (k_id != batch.entry_point_to_id.end()) {
-                    cl_kernel kern = k_type.get();
+                    cl_kernel kern = k.get();
                     cl_context context = _build_engine->get_cl_context().get();
-                    kernel::ptr kernel = kernels_factory::create(_engine, context, kern, k_id->second);
+                    kernel::ptr kernel = kernels_factory::create(_engine, context, kern, entry_point);
                     const auto& kmap = std::make_pair(k_id->second, kernel);
                     _kernels.insert(kmap);
                 } else {

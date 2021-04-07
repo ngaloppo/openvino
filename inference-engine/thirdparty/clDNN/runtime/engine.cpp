@@ -114,7 +114,9 @@ std::shared_ptr<cldnn::engine> engine::create(engine_types engine_type,
                                               const engine_configuration& configuration) {
     switch (engine_type) {
         case engine_types::ocl: return create_ocl_engine(device, runtime_type, configuration);
+#ifdef CLDNN_WITH_SYCL
         case engine_types::sycl: return create_sycl_engine(device, runtime_type, configuration);
+#endif
         default: throw std::runtime_error("Invalid engine type");
     }
 }

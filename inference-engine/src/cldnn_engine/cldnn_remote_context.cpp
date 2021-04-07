@@ -245,10 +245,10 @@ CLDNNExecutionContextImpl::CLDNNExecutionContextImpl(const std::shared_ptr<IInfe
     }
 
     // TODO: Parameterize this based on plugin config and compilation options
-    auto engine_type = cldnn::engine_types::ocl;
-    auto runtime_type = cldnn::runtime_types::ocl;
-    // Use actual runtime type. Hopefully this if devices mapping is not broken in that case.
-    cldnn::device_query device_query(runtime_type, _context_id, _va_device);
+    auto engine_type = cldnn::engine_types::sycl;
+    auto runtime_type = cldnn::runtime_types::l0;
+    // Use actual runtime and engine types
+    cldnn::device_query device_query(engine_type, runtime_type, _context_id, _va_device);
     auto device_map = device_query.get_available_devices();
 
     auto iter = device_map.find(m_config.device_id);
