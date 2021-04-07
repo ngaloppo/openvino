@@ -22,6 +22,7 @@
 
 #include <string>
 #include <stdexcept>
+#include <thread>
 
 namespace cldnn {
 

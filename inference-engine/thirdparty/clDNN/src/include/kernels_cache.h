@@ -169,7 +169,6 @@ public:
     kernel_id set_kernel_source(const std::shared_ptr<kernel_selector::kernel_string>& kernel_string,
                                 bool dump_custom_program);
     kernel::ptr get_kernel(kernel_id id) const;
-    gpu_toolkit& get_context() { return _context; }
     ocl_engine& get_build_engine() const { return *_build_engine; }
     // forces compilation of all pending kernels/programs
     void build_all();

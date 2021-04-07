@@ -18,17 +18,12 @@
 
 #include "kernels_factory.hpp"
 
-// #include "sycl/sycl_kernel.hpp"
-#include "ocl/ocl_kernel.hpp"
-
-
-
-
-
 namespace cldnn {
+#ifdef CLDNN_WITH_SYCL
 namespace sycl {
 std::shared_ptr<kernel> create_sycl_kernel(engine& engine, cl_context context, cl_kernel kernel, gpu::kernel_id kernel_id);
 }
+#endif
 namespace gpu {
 std::shared_ptr<kernel> create_ocl_kernel(engine& engine, cl_context context, cl_kernel kernel, gpu::kernel_id kernel_id);
 }  // namespace gpu
@@ -38,7 +33,10 @@ namespace kernels_factory {
 std::shared_ptr<kernel> create(engine& engine, cl_context context, cl_kernel kernel, gpu::kernel_id kernel_id) {
     switch (engine.type()) {
         case engine_types::ocl: return gpu::create_ocl_kernel(engine, context, kernel, kernel_id);
+#ifdef CLDNN_WITH_SYCL
         case engine_types::sycl: return sycl::create_sycl_kernel(engine, context, kernel, kernel_id);
+#endif
+        default: throw std::runtime_error("Unsupported engine type in kernels_factory::create");
     }
 }
 

@@ -43,16 +43,32 @@ endif()
 
 set(__CLDNN_Directory__main           "${CMAKE_CURRENT_SOURCE_DIR}")
 set(__CLDNN_Label__main                "")
-file(GLOB_RECURSE __CLDNN_Sources__main
+file(GLOB __CLDNN_Sources__main
     "${__CLDNN_Directory__main}/*.h"
     "${__CLDNN_Directory__main}/*.hpp"
     "${__CLDNN_Directory__main}/*.cpp"
   )
 
+file(GLOB __CLDNN_Sources__ocl
+    "${__CLDNN_Directory__main}/ocl/*.h"
+    "${__CLDNN_Directory__main}/ocl/*.hpp"
+    "${__CLDNN_Directory__main}/ocl/*.cpp"
+)
+
+file(GLOB __CLDNN_Sources__sycl
+    "${__CLDNN_Directory__main}/sycl/*.h"
+    "${__CLDNN_Directory__main}/sycl/*.hpp"
+    "${__CLDNN_Directory__main}/sycl/*.cpp"
+)
+
 set(__CLDNN_AllSources
     ${__CLDNN_Sources__main}
+    ${__CLDNN_Sources__ocl}
   )
 
+if (ENABLE_SYCL)
+  list(APPEND __CLDNN_AllSources ${__CLDNN_Sources__sycl})
+endif()
 
 # =============================================== Filters ==============================================
 

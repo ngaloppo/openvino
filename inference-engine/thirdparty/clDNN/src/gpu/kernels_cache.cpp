@@ -211,7 +211,6 @@ void kernels_cache::get_program_source(const kernels_code& kernels_source_code, 
 
         auto& current_batch = current_bucket.back();
         current_batch.dump_custom_program = dump_custom_program;
-        current_batch.one_time = one_time_kernel;
         current_batch.entry_point_to_id[entry_point] = code.id;
 
         assert(org_source_code.size() == 1);
@@ -238,7 +237,7 @@ void kernels_cache::get_program_source(const kernels_code& kernels_source_code, 
     }
 }
 
-kernels_cache::kernels_cache((engine& engine) : _engine(engine), _build_engine(nullptr) {
+kernels_cache::kernels_cache(engine& engine) : _engine(engine), _build_engine(nullptr) {
     if (_engine.type() == engine_types::ocl) {
         _build_engine = std::unique_ptr<ocl_engine>(new ocl_engine(_engine.get_device(), runtime_types::ocl, _engine.configuration()));
     } else {
@@ -255,11 +254,11 @@ kernels_cache::kernels_cache((engine& engine) : _engine(engine), _build_engine(n
         _build_engine = std::unique_ptr<ocl_engine>(new ocl_engine(devices.begin()->second, runtime_types::ocl, _engine.configuration()));
     }
 #if (CLDNN_THREADING == CLDNN_THREADING_TBB)
-    int n_threads = _context.get_configuration().n_threads;
+    int n_threads = _engine.configuration().n_threads;
     arena = std::unique_ptr<tbb::task_arena>(new tbb::task_arena());
     arena->initialize(n_threads);
 #elif(CLDNN_THREADING == CLDNN_THREADING_THREADPOOL)
-    int n_threads = _context.get_configuration().n_threads;
+    int n_threads = _engine.configuration().n_threads;
     pool = std::unique_ptr<thread_pool>(new thread_pool(n_threads));
 #endif
 }
@@ -300,13 +299,13 @@ static std::vector<unsigned char> getProgramBinaries(cl::Program program) {
 void kernels_cache::build_batch(const batch_program& batch) {
     OV_ITT_SCOPED_TASK(itt::domains::CLDNN, "KernelsCache::BuildProgram");
 
-    bool dump_sources = !_engine.configuration().ocl_sources_dumps_dir.empty() || batch.dump_custom_program;
+    bool dump_sources = !_engine.configuration().sources_dumps_dir.empty() || batch.dump_custom_program;
 
     std::string err_log;  // accumulated build log from all program's parts (only contains messages from parts which
 
     std::string current_dump_file_name = "";
     if (dump_sources) {
-        current_dump_file_name = _engine.configuration().ocl_sources_dumps_dir;
+        current_dump_file_name = _engine.configuration().sources_dumps_dir;
         if (!current_dump_file_name.empty() && current_dump_file_name.back() != '/')
             current_dump_file_name += '/';
 
@@ -367,15 +366,15 @@ void kernels_cache::build_batch(const batch_program& batch) {
             program.createKernels(&kernels);
         }
         {
-            std::lock_guard<std::mutex> lock(_context.get_cache_mutex());
+            std::lock_guard<std::mutex> lock(_mutex);
             for (auto& k : kernels) {
                 const auto& entry_point = k.getInfo<CL_KERNEL_FUNCTION_NAME>();
                 const auto& k_id = batch.entry_point_to_id.find(entry_point);
-                const auto& k_type = kernel_type(k, _context.get_device_info().supports_usm);
+                const auto& k_type = kernel_type(k, _engine.get_device_info().supports_usm);
                 if (k_id != batch.entry_point_to_id.end()) {
                     cl_kernel kern = k_type.get();
                     cl_context context = _build_engine->get_cl_context().get();
-                    kernel::ptr kernel = kernels_factory::create(_engine, context, kern, entry_point);
+                    kernel::ptr kernel = kernels_factory::create(_engine, context, kern, k_id->second);
                     const auto& kmap = std::make_pair(k_id->second, kernel);
                     _kernels.insert(kmap);
                 } else {
@@ -416,7 +415,7 @@ void kernels_cache::build_all() {
         return;
     std::vector<batch_program> batches;
     {
-        std::lock_guard<std::mutex> lock(_context.get_cache_mutex());
+        std::lock_guard<std::mutex> lock(_mutex);
         get_program_source(_kernels_code, &batches);
     }
 
@@ -444,7 +443,7 @@ void kernels_cache::build_all() {
 #endif
 
     {
-        std::lock_guard<std::mutex> lock(_context.get_cache_mutex());
+        std::lock_guard<std::mutex> lock(_mutex);
         _kernels_code.clear();
         _pending_compilation = false;
     }
