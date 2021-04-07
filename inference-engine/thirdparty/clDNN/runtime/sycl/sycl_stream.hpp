@@ -20,8 +20,6 @@
 namespace cldnn {
 namespace sycl {
 
-class events_pool;
-
 class sycl_stream : public stream {
 public:
     cl::sycl::queue& queue() { return _command_queue; }
@@ -32,7 +30,6 @@ public:
           _command_queue(other._command_queue),
           _queue_counter(other._queue_counter.load()),
           _last_barrier(other._last_barrier.load()),
-          _events_pool(std::move(other._events_pool)),
           _last_barrier_ev(other._last_barrier_ev),
           _output_event(other._output_event) {}
 
@@ -59,13 +56,13 @@ public:
     event::ptr create_user_event(bool set) override;
     event::ptr create_base_event() override;
     void release_events_pool() override;
+    const sycl_engine& get_sycl_engine() const { return _engine; };
 
 private:
     const sycl_engine& _engine;
     cl::sycl::queue _command_queue;
     std::atomic<uint64_t> _queue_counter{0};
     std::atomic<uint64_t> _last_barrier{0};
-    std::shared_ptr<events_pool> _events_pool;
     cl::sycl::event _last_barrier_ev;
     bool _output_event = false;
 };

@@ -46,12 +46,13 @@ event::ptr gpu_buffer::fill(stream& stream) {
 }
 
 event::ptr gpu_buffer::fill(stream& stream, unsigned char pattern) {
-    // auto& cl_stream = dynamic_cast<sycl_stream&>(stream);
-    auto ev = stream.create_base_event();
-    // cl::Event ev_sycl = dynamic_cast<base_event*>(ev.get())->get();
-    // cl_stream.queue().enqueueFillBuffer<unsigned char>(_buffer, pattern, 0, size(), nullptr, &ev_sycl);
-
-    return ev;
+    auto& casted_stream = dynamic_cast<sycl_stream&>(stream);
+    using access = cl::sycl::accessor<uint8_t, 1, cl::sycl::access::mode::write, cl::sycl::access::target::global_buffer>;
+    auto out_event = casted_stream.queue().submit([&](cl::sycl::handler &cgh) {
+        access acc_dst(_buffer, cgh, cl::sycl::range<1>(size()), cl::sycl::id<1>(0));
+        cgh.fill(acc_dst, pattern);
+    });
+    return std::make_shared<sycl_event>(casted_stream.get_sycl_engine().get_sycl_context(), out_event);
 }
 
 shared_mem_params gpu_buffer::get_internal_params() const {

@@ -119,7 +119,7 @@ static std::vector<uint8_t> get_binary(cl_kernel kernel) {
     return binary;
 }
 
-std::shared_ptr<kernel> create_sycl_kernel(engine& engine, cl_context context, cl_kernel kernel, gpu::kernel_id kernel_id) {
+std::shared_ptr<kernel> create_sycl_kernel(engine& engine, cl_context context, cl_kernel kernel, std::string entry_point) {
     if (engine.runtime_type() == runtime_types::l0) {
         std::cerr << "create kernel for l0 backend\n";
         auto binary = get_binary(kernel);
@@ -127,12 +127,12 @@ std::shared_ptr<kernel> create_sycl_kernel(engine& engine, cl_context context, c
         if (prog->get_state() == cl::sycl::program_state::none || prog->is_host()) {
             throw std::runtime_error("Invalid program state for sycl program");
         }
-        cl::sycl::kernel k = prog->get_kernel(kernel_id);
-        return std::make_shared<sycl::sycl_kernel>(k, kernel_id);
+        cl::sycl::kernel k = prog->get_kernel(entry_point);
+        return std::make_shared<sycl::sycl_kernel>(k, entry_point);
     } else {
         std::cerr << "create kernel for ocl backend\n";
         cl::sycl::kernel k(kernel, context);
-        return std::make_shared<sycl::sycl_kernel>(k, kernel_id);
+        return std::make_shared<sycl::sycl_kernel>(k, entry_point);
     }
 }
 

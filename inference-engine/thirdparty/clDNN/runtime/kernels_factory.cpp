@@ -21,20 +21,20 @@
 namespace cldnn {
 #ifdef CLDNN_WITH_SYCL
 namespace sycl {
-std::shared_ptr<kernel> create_sycl_kernel(engine& engine, cl_context context, cl_kernel kernel, gpu::kernel_id kernel_id);
+std::shared_ptr<kernel> create_sycl_kernel(engine& engine, cl_context context, cl_kernel kernel, std::string  entry_point);
 }
 #endif
 namespace gpu {
-std::shared_ptr<kernel> create_ocl_kernel(engine& engine, cl_context context, cl_kernel kernel, gpu::kernel_id kernel_id);
+std::shared_ptr<kernel> create_ocl_kernel(engine& engine, cl_context context, cl_kernel kernel, std::string  entry_point);
 }  // namespace gpu
 
 namespace kernels_factory {
 
-std::shared_ptr<kernel> create(engine& engine, cl_context context, cl_kernel kernel, gpu::kernel_id kernel_id) {
+std::shared_ptr<kernel> create(engine& engine, cl_context context, cl_kernel kernel, std::string  entry_point) {
     switch (engine.type()) {
-        case engine_types::ocl: return gpu::create_ocl_kernel(engine, context, kernel, kernel_id);
+        case engine_types::ocl: return gpu::create_ocl_kernel(engine, context, kernel, entry_point);
 #ifdef CLDNN_WITH_SYCL
-        case engine_types::sycl: return sycl::create_sycl_kernel(engine, context, kernel, kernel_id);
+        case engine_types::sycl: return sycl::create_sycl_kernel(engine, context, kernel, entry_point);
 #endif
         default: throw std::runtime_error("Unsupported engine type in kernels_factory::create");
     }
