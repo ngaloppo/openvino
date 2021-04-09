@@ -36,7 +36,8 @@ struct primitive_type_base : primitive_type {
         return std::make_shared<typed_primitive_inst<PType>>(network, node);
     }
 
-    std::unique_ptr<primitive_impl> choose_impl(const engine& engine, const cldnn::program_node& node) const override {
+    // TODO: Should we get rid of engine type in impl map? Or we must pass internal build engine to get real ocl type?
+    std::unique_ptr<primitive_impl> choose_impl(const engine& /* engine */, const cldnn::program_node& node) const override {
         if (node.type() != this)
             throw std::invalid_argument("primitive_type_base::choose_impl: primitive type mismatch");
 
@@ -44,14 +45,14 @@ struct primitive_type_base : primitive_type {
         return std::move(std::unique_ptr<primitive_impl>(factory(node)));
     }
 
-    bool does_an_implementation_exist(const engine& engine, const cldnn::program_node& node) const override {
+    bool does_an_implementation_exist(const engine& /* engine */, const cldnn::program_node& node) const override {
         if (node.type() != this)
             throw std::invalid_argument("primitive_type_base::choose_impl: primitive type mismatch");
 
         return implementation_map<PType>::check(engine_types::ocl, node);
     }
 
-    bool does_possible_implementation_exist(const engine& engine, const cldnn::program_node& node) const override {
+    bool does_possible_implementation_exist(const engine& /* engine */, const cldnn::program_node& node) const override {
         if (node.type() != this)
             throw std::invalid_argument("primitive_type_base::choose_impl: primitive type mismatch");
         return implementation_map<PType>::check_io_eq(engine_types::ocl, node);

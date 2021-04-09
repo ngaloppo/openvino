@@ -32,7 +32,7 @@ TEST(activation_f32_fw_gpu, not_basic_yxfb) {
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
     set_values(input,
     { 1.0f, 0.0f, -3.0f, 4.0f, 5.0f,
       0.0f, 2.0f, 3.0f, 4.0f, -6.0f,
@@ -81,7 +81,7 @@ TEST(activation_f32_fw_gpu, erf_basic_yxfb) {
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
     set_values(input,
                { 1.0f, 0.0f, -3.0f, 4.0f, 5.0f,
                  0.0f, 2.0f, 3.0f, 4.0f, -6.0f,
@@ -126,7 +126,7 @@ TEST(activation_f32_fw_gpu, hard_sigmoid_basic_yxfb) {
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
     activation_additional_params params = { 1.0f, 0.5f };
     set_values(input,
                { 1.0f, 0.0f, -3.0f, 4.0f, 5.0f,
@@ -173,7 +173,7 @@ TEST(activation_f32_fw_gpu, reciprocal_basic_yxfb) {
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
     set_values(input,
                { 1.0f, 0.3f, -3.0f, 4.0f, 5.0f,
                  21.0f, 2.0f, 3.0f, 4.0f, -6.0f,
@@ -219,7 +219,7 @@ TEST(activation_f32_fw_gpu, selu_basic_yxfb) {
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
     activation_additional_params params = { 1.0f, 0.5f };
     set_values(input,
                { 1.0f, 0.3f, -3.0f, 4.0f, 5.0f,
@@ -267,7 +267,7 @@ TEST(activation_f32_fw_gpu, softplus_basic_yxfb) {
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
     set_values(input,
                { 1.0f, 0.3f, -3.0f, 4.0f, 5.0f,
                  21.0f, 2.0f, 3.0f, 4.0f, -6.0f,
@@ -313,7 +313,7 @@ TEST(activation_f32_fw_gpu, softsign_basic_yxfb) {
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
     set_values(input,
                { 1.0f, 0.3f, -3.0f, 4.0f, 5.0f,
                  21.0f, 2.0f, 3.0f, 4.0f, -6.0f,
@@ -359,7 +359,7 @@ TEST(activation_f32_fw_gpu, sign_basic_yxfb) {
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
     set_values(input,
                { 1.0f, 0.0f, -3.0f, 4.0f, 5.0f,
                  21.0f, 2.0f, 3.0f, 4.0f, -6.0f,
@@ -399,7 +399,7 @@ TEST(activation_f32_fw_gpu, sign_basic_yxfb) {
 TEST(activation_f32_fw_gpu, pow_basic_yxfb) {
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb, { 1, 1, 2, 2 } });
     set_values(input,
     { 1.0f, 2.0f, 3.0f, 4.0f });
     VF<float> output_vec = { 1.0f, 4.0f, 9.0f, 16.0f };
@@ -435,7 +435,7 @@ TEST(activation_f32_fw_gpu, pow_basic_yxfb) {
 TEST(activation_f16_fw_gpu, pow_basic_yxfb) {
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f16, format::yxfb, { 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f16, format::yxfb, { 1, 1, 2, 2 } });
     set_values(input,
         { FLOAT16(1.0f), FLOAT16(2.0f), FLOAT16(3.0f), FLOAT16(4.5f) });
     VF<FLOAT16> output_vec = { FLOAT16(1.0f), FLOAT16(8.0f), FLOAT16(27.0f), FLOAT16(91.125f) };
@@ -485,7 +485,7 @@ TEST(activation_f32_fw_gpu, relu_basic_yxfb) {
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
     set_values(input,
     { 1.0f, -2.0f, -3.0f, 4.0f, 5.0f,
       2.0f, 2.0f, 3.0f, 4.0f, -6.0f,
@@ -553,7 +553,7 @@ TEST(activation_f32_fw_gpu, relu_basic_bfzyx) {
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfzyx,{ 1, 1, 5, 4, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfzyx,{ 1, 1, 5, 4, 2 } });
     set_values(input,
     { 1.0f, -2.0f, -3.0f, 4.0f, 5.0f,
         2.0f, 2.0f, 3.0f, 4.0f, -6.0f,
@@ -616,8 +616,8 @@ TEST(activation_f32_fw_gpu, basic_yxfb_all_functions)
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 5, 4 } });
-    auto input_params = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 2, 1, 1 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb,{ 1, 1, 5, 4 } });
+    auto input_params = engine.allocate_memory({ data_types::f32, format::yxfb,{ 1, 2, 1, 1 } });
     set_values(input,
     { 0.0f, -2.0f, -3.0f, 4.0f, 5.0f,
         2.0f, 2.0f, 3.0f, 4.0f, -6.0f,
@@ -794,8 +794,8 @@ TEST(activation_f16_fw_gpu, basic_bfyx_all_functions)
 {
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f16, format::bfyx, { 1, 1, 2, 4 } });
-    auto input_params = memory::allocate(engine, { data_types::f16, format::bfyx, { 1, 2, 1, 1 } });
+    auto input = engine.allocate_memory({ data_types::f16, format::bfyx, { 1, 1, 2, 4 } });
+    auto input_params = engine.allocate_memory({ data_types::f16, format::bfyx, { 1, 2, 1, 1 } });
 
     set_values(input, { FLOAT16(-4.5f), FLOAT16(-2.5f), FLOAT16(-1.5f), FLOAT16(0.5f),
                         FLOAT16(0.9f),  FLOAT16(1.5f),  FLOAT16(2.0f),  FLOAT16(2.5f) });
@@ -882,7 +882,7 @@ TEST(activation_f32_fw_gpu, basic_yxfb_asin_acos_log_atan)
 {
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 4 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb,{ 1, 1, 2, 4 } });
     set_values(input, { 0.12f, 0.56f, 0.45f, 0.789f, 0.546f, 0.999f, 0.7899f, 0.6677f});
 
     std::vector<activation_func> funcs = {
@@ -975,7 +975,7 @@ TEST(activation_f32_fw_gpu, relu_basic_acosh_yxfb) {
 
     const auto &engine = get_test_engine();
 
-    auto input = memory::allocate(engine, {data_types::f32, format::yxfb, {1, 1, 5, 4}});
+    auto input = engine.allocate_memory({data_types::f32, format::yxfb, {1, 1, 5, 4}});
 
     set_values(input,
                {1.0f, 2.0f, 3.0f, 4.0f, 5.0f,
@@ -1036,7 +1036,7 @@ TEST(activation_f32_fw_gpu, relu_basic_input_padding_yxfb) {
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
 
     set_values(input,
     { 1.0f, -2.0f, -3.0f, 4.0f, 5.0f,
@@ -1114,7 +1114,7 @@ TEST(activation_f32_fw_gpu, relu_basic_input_padding_bfzyx) {
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfzyx,{ 1, 1, 5, 4, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfzyx,{ 1, 1, 5, 4, 2 } });
     set_values(input,
     {
         1.0f, -2.0f, -3.0f, 4.0f, 5.0f,
@@ -1192,7 +1192,7 @@ TEST(activation_f32_fw_gpu, relu_basic_output_padding_yxfb) {
 
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb, { 1, 1, 5, 4 } });
     set_values(input,
     { 1.0f, -2.0f, -3.0f, 4.0f, 5.0f,
         2.0f, 2.0f, 3.0f, 4.0f, -6.0f,
@@ -1243,7 +1243,7 @@ TEST(activation_f32_fw_gpu, basic_yxfb_floor_ceil)
 {
     const auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 4 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb,{ 1, 1, 2, 4 } });
     set_values(input, { 0.01f, 0.99f, -0.01f, -0.99f, 1.1f, 1.0f, 0.0f, -1.1f });
 
     std::vector<activation_func> funcs = {
@@ -1297,7 +1297,7 @@ TEST(activation_f32_fw_gpu, basic_yxfb_floor_ceil)
 TEST(activation_i8_fw_gpu, basic_yxfb_all_funcs)
 {
     const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::i8, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::i8, format::yxfb,{ 2, 2, 2, 2 } });
 
     std::vector<int8_t> input_vec = {
         1,   0,  5,   1,
@@ -1355,7 +1355,7 @@ TEST(activation_i8_fw_gpu, basic_yxfb_all_funcs)
 TEST(activation_i32_fw_gpu, basic_yxfb_i32_funcs)
 {
     const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::i32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::i32, format::yxfb,{ 2, 2, 2, 2 } });
 
     std::vector<int32_t> input_vec = {
         1,   0,  5,   1,

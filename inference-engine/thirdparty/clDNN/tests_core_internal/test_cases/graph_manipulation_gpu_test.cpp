@@ -4,8 +4,8 @@
 
 #include "test_utils.h"
 
-#include "runtime/engine.h"
-#include "runtime/memory.h"
+#include "cldnn/runtime/engine.hpp"
+#include "cldnn/runtime/memory.hpp"
 
 #include "program_impl.h"
 #include "topology_impl.h"

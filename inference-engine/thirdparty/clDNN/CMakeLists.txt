@@ -11,7 +11,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(IntelHelpers)
 
 # TODO: Provide user option to control gpu engine type
-set(ENABLE_SYCL ON CACHE STRING ""  FORCE)
+set(ENABLE_SYCL OFF CACHE STRING ""  FORCE)
 if (ENABLE_SYCL)
   include("cmake/SYCL.cmake")
   add_definitions(-DCLDNN_WITH_SYCL=1)
