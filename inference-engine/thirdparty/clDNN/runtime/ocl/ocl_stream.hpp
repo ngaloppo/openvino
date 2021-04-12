@@ -73,6 +73,8 @@ public:
     event::ptr create_base_event() override;
     void release_events_pool() override;
 
+    queue_type get_queue() const { return _command_queue; }
+
 private:
     const ocl_engine& _engine;
     queue_type _command_queue;
