@@ -25,6 +25,7 @@ struct memory {
     virtual event::ptr fill(stream& stream) = 0;
 
     size_t size() const { return _bytes_count; }
+    size_t count() const { return _layout.count(); }
     virtual shared_mem_params get_internal_params() const = 0;
     virtual bool is_allocated_by(const engine& engine) const { return &engine == _engine; }
     engine* get_engine() const { return _engine; }
@@ -57,11 +58,11 @@ struct memory {
 protected:
     engine* _engine;
     const layout _layout;
+    // layout bytes count, needed because of traits static map destruction
+    // before run of memory destructor, when engine is static
     size_t _bytes_count;
 
 private:
-    // layout bytes count, needed because of traits static map destruction
-    // before run of memory destructor, when engine is static
     allocation_type _type;
     bool _reused;
 };
@@ -104,6 +105,12 @@ struct mem_lock {
     T* begin() & { return _ptr; }
     T* end() & { return _ptr + size(); }
 #endif
+
+    /// @brief Provides indexed access to pointed memory.
+    T& operator[](size_t idx) const& {
+        assert(idx < size());
+        return _ptr[idx];
+    }
 
     T* data() const { return _ptr; }
 

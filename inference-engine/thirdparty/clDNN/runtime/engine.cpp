@@ -19,6 +19,7 @@
 #include "cldnn/runtime/event.hpp"
 #include "cldnn/runtime/memory.hpp"
 #include "cldnn/runtime/stream.hpp"
+#include "cldnn/runtime/device_query.hpp"
 #include <string>
 #include <vector>
 #include <memory>
@@ -96,6 +97,17 @@ memory::ptr engine::allocate_memory(const layout& layout) {
     return allocate_memory(layout, type);
 }
 
+memory::ptr engine::share_image(const layout& layout, shared_handle img) {
+    shared_mem_params params = { shared_mem_type::shared_mem_image, nullptr, nullptr, img,
+#ifdef _WIN32
+        nullptr,
+#else
+        0,
+#endif
+        0 };
+    return reinterpret_handle(layout, params);
+}
+
 memory_pool& engine::get_memory_pool() {
     return *_memory_pool.get();
 }
@@ -119,6 +131,15 @@ std::shared_ptr<cldnn::engine> engine::create(engine_types engine_type,
 #endif
         default: throw std::runtime_error("Invalid engine type");
     }
+}
+
+std::shared_ptr<cldnn::engine> engine::create(engine_types engine_type,
+                                              runtime_types runtime_type,
+                                              const engine_configuration& configuration) {
+    device_query query(engine_type, runtime_type);
+    device::ptr default_device = query.get_available_devices().begin()->second;
+
+    return engine::create(engine_type, runtime_type, default_device, configuration);
 }
 
 }  // namespace cldnn

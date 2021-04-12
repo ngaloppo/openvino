@@ -134,14 +134,7 @@ void CLDNNRemoteBlobImpl::allocate() noexcept {
     }
 #endif
     case BlobType::BT_IMG_SHARED: {
-        cldnn::shared_mem_params params = { cldnn::shared_mem_type::shared_mem_image, nullptr, nullptr, m_mem,
-#ifdef _WIN32
-        nullptr,
-#else
-        0,
-#endif
-        0 };
-        m_memObject = eng->reinterpret_handle(m_layout, params);
+        m_memObject = eng->share_image(m_layout, m_mem);
         break;
     }
     default:

@@ -41,10 +41,10 @@ TEST(max_unpooling_gpu, basic_in2x3x2x2) {
     //  f1: b0:  0    0  0   b1:   0    0    0
     //  f1: b0:  0    8  16  b1:   12   0    17
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 1 } });
-    auto arg_max = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 1 } });
+    auto arg_max = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
 
     set_values(input, {
         4.0f, 4.0f,
@@ -61,7 +61,7 @@ TEST(max_unpooling_gpu, basic_in2x3x2x2) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("arg_max", arg_max));
     topology.add(max_unpooling("max_unpooling", "input", "arg_max", { 1, 1, 2, 2 }, { 1, 1, 1, 1 }));
 
@@ -72,8 +72,8 @@ TEST(max_unpooling_gpu, basic_in2x3x2x2) {
     auto outputs = network.execute();
 
     auto output = outputs.at("max_unpooling").get_memory();
-    auto output_ptr = output.pointer<float>();
-    auto output_layout = output.get_layout();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
+    auto output_layout = output->get_layout();
 
     EXPECT_EQ(output_layout.format, format::bfyx);
     EXPECT_EQ(output_layout.size.spatial[1], 2);
@@ -123,10 +123,10 @@ TEST(max_unpooling_gpu, basic_in2x3x2x2_output_padding) {
     //  f1: b0:  0    0  0   b1:   0    0    0
     //  f1: b0:  0    8  16  b1:   12   0    17
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
-    auto arg_max = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
+    auto arg_max = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
 
     set_values(input, {
         4.0f, 4.0f,
@@ -143,7 +143,7 @@ TEST(max_unpooling_gpu, basic_in2x3x2x2_output_padding) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("arg_max", arg_max));
     topology.add(max_unpooling("max_unpooling", "input", "arg_max", { 1, 1, 2, 2 }, { 1, 1, 1, 1 }, { 0, 0, 0, 0 }, padding({ 0, 0, 1, 1 }, 0)));
 
@@ -154,8 +154,8 @@ TEST(max_unpooling_gpu, basic_in2x3x2x2_output_padding) {
     auto outputs = network.execute();
 
     auto output = outputs.at("max_unpooling").get_memory();
-    auto output_ptr = output.pointer<float>();
-    auto output_layout = output.get_layout();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
+    auto output_layout = output->get_layout();
 
     EXPECT_EQ(output_layout.format, format::bfyx);
     EXPECT_EQ(output_layout.size.spatial[1], 2);
@@ -214,10 +214,10 @@ TEST(max_unpooling_gpu, basic_in2x3x2x2_output_size) {
     //  f1: b0:  0    0  0   b1:   0    0    0
     //  f1: b0:  0    8  16  b1:   12   0    17
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
-    auto arg_max = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
+    auto arg_max = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
 
     set_values(input, {
         4.0f, 4.0f,
@@ -234,7 +234,7 @@ TEST(max_unpooling_gpu, basic_in2x3x2x2_output_size) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("arg_max", arg_max));
     topology.add(max_unpooling("max_unpooling", "input", "arg_max", {2, 2, 3, 2}));
 
@@ -245,8 +245,8 @@ TEST(max_unpooling_gpu, basic_in2x3x2x2_output_size) {
     auto outputs = network.execute();
 
     auto output = outputs.at("max_unpooling").get_memory();
-    auto output_ptr = output.pointer<float>();
-    auto output_layout = output.get_layout();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
+    auto output_layout = output->get_layout();
 
     EXPECT_EQ(output_layout.format, format::bfyx);
     EXPECT_EQ(output_layout.size.spatial[1], 2);
@@ -295,10 +295,10 @@ TEST(max_unpooling_gpu, basic_in2x3x2x2_fp16) {
     //  f1: b0:  0    0  0   b1:   0    0    0
     //  f1: b0:  0    8  16  b1:   12   0    17
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f16, format::bfyx,{ 2, 2, 2, 1 } });
-    auto arg_max = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
+    auto input = engine.allocate_memory({ data_types::f16, format::bfyx,{ 2, 2, 2, 1 } });
+    auto arg_max = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
 
     set_values(input, {
         FLOAT16(4.0f), FLOAT16(4.0f),
@@ -315,7 +315,7 @@ TEST(max_unpooling_gpu, basic_in2x3x2x2_fp16) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("arg_max", arg_max));
     topology.add(max_unpooling("max_unpooling", "input", "arg_max", { 1, 1, 2, 2 }, { 1, 1, 1, 1 }));
 
@@ -326,8 +326,8 @@ TEST(max_unpooling_gpu, basic_in2x3x2x2_fp16) {
     auto outputs = network.execute();
 
     auto output = outputs.at("max_unpooling").get_memory();
-    auto output_ptr = output.pointer<uint16_t>();
-    auto output_layout = output.get_layout();
+    cldnn::mem_lock<uint16_t> output_ptr(output, get_test_stream());
+    auto output_layout = output->get_layout();
 
     EXPECT_EQ(output_layout.format, format::bfyx);
     EXPECT_EQ(output_layout.size.spatial[1], 2);
@@ -375,10 +375,10 @@ TEST(max_unpooling_gpu, basic_in2x2x3x2_max_with_argmax_pooling_unpooling) {
     //  f1: b0:  0    0  0   b1:   0    0    0
     //  f1: b0:  0    8  16  b1:   12   0    17
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 3, 2 } });
-    auto arg_max = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 3, 2 } });
+    auto arg_max = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 2, 1 } });
 
     set_values(input, {
         1.0f, 2.0f, -10.f,
@@ -392,7 +392,7 @@ TEST(max_unpooling_gpu, basic_in2x2x3x2_max_with_argmax_pooling_unpooling) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(mutable_data("arg_max", arg_max));
     topology.add(pooling("pooling_max_with_argmax", "input", "arg_max", pooling_mode::max_with_argmax, { 1, 1, 2, 2 }, { 1, 1, 1, 1 }));
     topology.add(max_unpooling("max_unpooling", "pooling_max_with_argmax", "arg_max", { 1, 1, 2, 2 }, { 1, 1, 1, 1 }));
@@ -404,9 +404,9 @@ TEST(max_unpooling_gpu, basic_in2x2x3x2_max_with_argmax_pooling_unpooling) {
     auto outputs = network.execute();
 
     auto output = outputs.at("max_unpooling").get_memory();
-    auto output_ptr = output.pointer<float>();
-    auto output_layout = output.get_layout();
-    auto argmax_ptr = arg_max.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
+    auto output_layout = output->get_layout();
+    cldnn::mem_lock<float> argmax_ptr(arg_max, get_test_stream());
 
     EXPECT_EQ(output_layout.format, format::bfyx);
     EXPECT_EQ(output_layout.size.spatial[1], 2);

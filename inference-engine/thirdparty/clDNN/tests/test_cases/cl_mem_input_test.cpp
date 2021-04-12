@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "test_utils.h"
 
 #include <cldnn/primitives/input_layout.hpp>
 #include <cldnn/primitives/activation.hpp>
 #include <cldnn/primitives/data.hpp>
+#include <cldnn/runtime/device_query.hpp>
 
 
 #include <cl2_wrapper.h>
@@ -21,10 +21,8 @@ typedef std::chrono::duration<double, std::ratio<1, 1000>> ms;
 typedef std::chrono::duration<float> fsec;
 
 
-void checkStatus(int status, const char *message)
-{
-    if (status != 0)
-    {
+void checkStatus(int status, const char *message) {
+    if (status != 0) {
         std::string str_message(message + std::string(": "));
         std::string str_number(std::to_string(status));
 
@@ -32,8 +30,7 @@ void checkStatus(int status, const char *message)
     }
 }
 
-std::vector<unsigned char> createSampleData(int width, int height)
-{
+std::vector<unsigned char> createSampleData(int width, int height) {
     int data_size = width * (height + height / 2);
     auto data = std::vector<unsigned char>(data_size);
     srand((unsigned)time(0));
@@ -52,8 +49,7 @@ std::vector<unsigned char> createSampleData(int width, int height)
     return data;
 }
 
-std::vector<float> createReferenceData(std::vector<unsigned char> data, int width, int height, cldnn::format format)
-{
+std::vector<float> createReferenceData(std::vector<unsigned char> data, int width, int height, cldnn::format format) {
     auto img = std::vector<float>(width * height * 3);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
@@ -73,8 +69,7 @@ std::vector<float> createReferenceData(std::vector<unsigned char> data, int widt
                 img[j + width * i] = R;
                 img[j + width * i + width * height] = G;
                 img[j + width * i + width * height * 2] = B;
-            }
-            else { //byxf
+            } else { //byxf
                 img[3* width*i + 3 * j] = R;
                 img[3 * width * i + 3 * j + 1] = G;
                 img[3 * width*i + 3 * j + 2] = B;
@@ -85,14 +80,12 @@ std::vector<float> createReferenceData(std::vector<unsigned char> data, int widt
     return img;
 }
 
-struct OpenCL
-{
+struct OpenCL {
     cl::Context _context;
     cl::Device _device;
     cl::CommandQueue _queue;
 
-    OpenCL()
-    {
+    OpenCL() {
         // get Intel iGPU OCL device, create context and queue
         {
             static constexpr auto INTEL_PLATFORM_VENDOR = "Intel(R) Corporation";
@@ -131,8 +124,7 @@ struct OpenCL
             _queue = cl::CommandQueue(_context, _device, props);
         }
     }
-    void releaseOclImage(std::shared_ptr<cl_mem> image)
-    {
+    void releaseOclImage(std::shared_ptr<cl_mem> image) {
         checkStatus(clReleaseMemObject(*image), "clReleaseMemObject");
     }
 };
@@ -171,25 +163,25 @@ TEST(cl_mem_check, check_2_inputs) {
     err = clEnqueueWriteImage(ocl_instance->_queue.get(), nv12_image_plane_uv, true, origin, uv_region, 0, 0, &data[width * height], 0, NULL, NULL);
     checkStatus(err, "Writing nv12 image plane_uv failed");
 
-    device_query query(static_cast<void*>(ocl_instance->_context.get()));
+    device_query query(engine_types::ocl, runtime_types::ocl, static_cast<void*>(ocl_instance->_context.get()));
     auto devices = query.get_available_devices();
 
     auto engine_config = cldnn::engine_configuration();
-    engine engine(devices.begin()->second, engine_config);
+    auto engine = engine::create(engine_types::ocl, runtime_types::ocl, devices.begin()->second, engine_config);
 
     auto input = input_layout("input", { data_types::i8, format::nv12, {1,1,height,width} });
     auto input2 = input_layout("input2", { data_types::i8, format::nv12, {1,1,height / 2,width / 2} });
     auto output_format = cldnn::format::byxf;
     layout output_layout(data_types::f32, output_format, { 1,3,height,width });
-    auto input_memory = cldnn::memory::share_image(engine, input.layout, nv12_image_plane_y,  0);
-    auto input_memory2 = cldnn::memory::share_image(engine,  input2.layout, nv12_image_plane_uv, 0);
+    auto input_memory = engine->share_image(input.layout, nv12_image_plane_y);
+    auto input_memory2 = engine->share_image(input2.layout, nv12_image_plane_uv);
 
     topology topology;
     topology.add(input);
     topology.add(input2);
     topology.add(reorder("reorder", "input", "input2", output_layout));
 
-    network network(engine, topology);
+    network network(*engine, topology);
     network.set_input_data("input", input_memory);
     network.set_input_data("input2", input_memory2);
 
@@ -197,7 +189,7 @@ TEST(cl_mem_check, check_2_inputs) {
 
     std::vector<float> reference_results = createReferenceData(data, width, height, output_format);
     auto output_prim = outputs.begin()->second.get_memory();
-    auto output_ptr = output_prim.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output_prim, get_test_stream());
     int size = width * height * 3;
     for (auto i = 0; i < size; i++) {
         EXPECT_NEAR(reference_results[i], output_ptr[i], 1.001f);
@@ -283,30 +275,29 @@ TEST(cl_mem_check, check_input) {
     checkStatus(clReleaseMemObject(nv12_image_plane_uv), "clReleaseMemObject");
     checkStatus(clReleaseMemObject(nv12_image_plane_y), "clReleaseMemObject");
 
-    device_query query(static_cast<void*>(ocl_instance->_context.get()));
+    device_query query(engine_types::ocl, runtime_types::ocl, static_cast<void*>(ocl_instance->_context.get()));
     auto devices = query.get_available_devices();
 
-    auto engine_config = cldnn::engine_configuration();
-    engine engine(devices.begin()->second, engine_config);
+    auto engine = engine::create(engine_types::ocl, runtime_types::ocl, devices.begin()->second);
 
     auto input = input_layout("input", { data_types::i8, format::nv12, {1,1,height,width} });
     auto output_format = cldnn::format::byxf;
     layout output_layout(data_types::f32, output_format, { 1,3,height,width });
-    auto input_memory = cldnn::memory::share_image(engine, input.layout, img,  0);
+    auto input_memory = engine->share_image(input.layout, img);
 
     topology topology;
 
     topology.add(input);
     topology.add(reorder("reorder", "input", output_layout));
 
-    network network(engine, topology);
+    network network(*engine, topology);
     network.set_input_data("input", input_memory);
 
     auto outputs = network.execute();
 
     std::vector<float> reference_results = createReferenceData(data, width, height, output_format);
     auto output_prim = outputs.begin()->second.get_memory();
-    auto output_ptr = output_prim.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output_prim, get_test_stream());
     int size = width * height * 3;
     for (auto i = 0; i < size; i++) {
         EXPECT_NEAR(reference_results[i], output_ptr[i], 1.001f);

@@ -4,7 +4,7 @@
 
 #include "test_utils.h"
 
-#include "runtime/engine.h"
+#include "cldnn/runtime/engine.hpp"
 
 #include "program_impl.h"
 #include "data_inst.h"
@@ -23,20 +23,19 @@ using namespace ::tests;
 std::map<primitive_id, network_output> test_prepare_conv_eltw_fusing(bool eltw1, bool eltw2)
 {
     build_options build_opt;
-    build_opt.set_option(build_option::graph_dumps_dir("dumps"));
     build_opt.set_option(build_option::optimize_data(true));
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
-    auto weights1 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
-    auto weights2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
+    auto weights1 = engine.allocate_memory({ data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
+    auto weights2 = engine.allocate_memory({ data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
 
     set_values(input, { 1.1f, 1.2f, 1.3f, 1.4f });
     set_values(weights1, { 2.1f});
     set_values(weights2, { -1.5f});
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("weights1", weights1));
     topology.add(data("weights2", weights2));
     topology.add(convolution("conv1", { "input" }, { "weights1" }));
@@ -67,15 +66,15 @@ std::map<primitive_id, network_output> test_prepare_conv_eltw_fusing(bool eltw1,
     {
         topology.add(eltwise("eltw3", "conv1", "conv2", cldnn::eltwise_mode::sum));
     }
-    program_impl::ptr prog = program_impl::build_program(*engine.get(), *topology.get(), build_opt, false, true);
+    program_impl::ptr prog = program_impl::build_program(engine, *topology.get(), build_opt, false, true);
 
     layout_optimizer lo;
     program_impl_wrapper::apply_opt_pass<prepare_conv_eltw_fusing>(*prog, lo);
 
     program_impl_wrapper::run_graph_compilation(*prog);
     program_impl_wrapper::prepare_memory_dependencies(*prog);
-    cldnn::refcounted_obj_ptr<cldnn::network_impl> net = network_impl::allocate_network(*engine.get(), *prog, 0);
-    network network = (cldnn::network) net.get();
+    std::shared_ptr<cldnn::network_impl> net = network_impl::allocate_network(engine, prog);
+    network network(net);
     network.set_input_data("input", input);
 
     return network.execute();
@@ -94,7 +93,7 @@ TEST(prepare_conv_eltw_fusing, testlp)
     float epsilon = 1e-3f;
     for (auto& it : outputs)
     {
-        auto output = it.second.get_memory().pointer<float>();
+        cldnn::mem_lock<float> output(it.second.get_memory(), get_test_stream());
         for (int i = 0; i < 4; i++)
             EXPECT_NEAR(ref_out[i], output[i], epsilon);
     }
@@ -114,7 +113,7 @@ TEST(prepare_conv_eltw_fusing, testl)
     float epsilon = 1e-3f;
     for (auto& it : outputs)
     {
-        auto output = it.second.get_memory().pointer<float>();
+        cldnn::mem_lock<float> output(it.second.get_memory(), get_test_stream());
         for (int i = 0; i < 4; i++)
             EXPECT_NEAR(ref_out[i], output[i], epsilon);
     }
@@ -135,7 +134,7 @@ TEST(prepare_conv_eltw_fusing, testp)
     float epsilon = 1e-3f;
     for (auto& it : outputs)
     {
-        auto output = it.second.get_memory().pointer<float>();
+        cldnn::mem_lock<float> output(it.second.get_memory(), get_test_stream());
         for (int i = 0; i < 4; i++)
             EXPECT_NEAR(ref_out[i], output[i], epsilon);
     }

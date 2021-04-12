@@ -265,7 +265,7 @@ static void log_memory_to_file(memory::ptr mem, stream& stream, std::string laye
 Network_impl will always have net_id = 0 when it will be cldnn internal micronetwork (created i.e by propagate_constants
 opt pass).
 */
-network_impl::network_impl(program_impl::cptr program, stream::ptr stream, bool is_internal)
+network_impl::network_impl(program_impl::ptr program, stream::ptr stream, bool is_internal)
     : _program(program), _stream(stream), _internal(is_internal), _reset_arguments(true) {
     static std::atomic<uint32_t> id_gen{0};
     if (!_internal) {
@@ -281,7 +281,7 @@ network_impl::network_impl(program_impl::cptr program, stream::ptr stream, bool 
 
 network_impl::~network_impl() { }
 
-network_impl::ptr network_impl::allocate_network(engine& engine, program_impl::cptr program, bool is_internal) {
+network_impl::ptr network_impl::allocate_network(engine& engine, program_impl::ptr program, bool is_internal) {
     auto stream = engine.create_stream();
     return std::make_shared<network_impl>(program, stream, is_internal);
 }

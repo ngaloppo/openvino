@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
 #include "test_utils.h"
 
 #include <cldnn/primitives/input_layout.hpp>
@@ -31,7 +29,7 @@ std::vector<T> generate_random_input(size_t b, size_t f, size_t y, size_t x, int
 }
 
 template<typename T>
-void check_feature_map(cldnn::pointer<T> output_ptr, std::vector<T> &input_vec, size_t batch_num, size_t feature_num, size_t y_size, size_t x_size, size_t feature_id, size_t factor)
+void check_feature_map(T* output_ptr, std::vector<T> &input_vec, size_t batch_num, size_t feature_num, size_t y_size, size_t x_size, size_t feature_id, size_t factor)
 {
     for (size_t b = 0; b < batch_num; ++b) { //B
         for (size_t y = 0; y < y_size; ++y) { //Y
@@ -47,14 +45,14 @@ void check_feature_map(cldnn::pointer<T> output_ptr, std::vector<T> &input_vec, 
 template<typename T>
 void split_test(int batch_num, int feature_num, int x_size, int y_size, std::vector<cldnn::tensor> split_offsets)
 {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
     cldnn::tensor reference_input_size = { batch_num, feature_num, x_size, y_size };
 
-    cldnn::memory input = memory::allocate(engine, { type_to_data_type<T>::value, format::bfyx, reference_input_size });
+    cldnn::memory::ptr input = engine.allocate_memory({ type_to_data_type<T>::value, format::bfyx, reference_input_size });
     std::vector<std::pair<primitive_id, cldnn::tensor> > input_ids_offsets;
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
 
     // lambda exoression to create the primitive id for the splits
     auto create_split_id = [](size_t splitNum) {
@@ -107,15 +105,15 @@ void split_test(int batch_num, int feature_num, int x_size, int y_size, std::vec
         expected_sizes.push_back(size);
     }
 
-    pointer<T> input_ptr = input.pointer<T>();
+    cldnn::mem_lock<T> input_ptr(input, get_test_stream());
 
     for (size_t splitNum = 0; splitNum < split_offsets.size(); splitNum++)
     {
         primitive_id split_id = "split:" + create_split_id(splitNum);
-        cldnn::memory output = outputs.at(split_id).get_memory();
-        auto prim = output.get_layout();
+        cldnn::memory::ptr output = outputs.at(split_id).get_memory();
+        auto prim = output->get_layout();
         EXPECT_EQ(prim.size, expected_sizes[splitNum]);
-        auto output_ptr = output.pointer<T>();
+        cldnn::mem_lock<T> output_ptr(output, get_test_stream());
 
         // Output tensor size
         auto output_batch = prim.size.batch[0];
@@ -206,13 +204,13 @@ TEST(split_gpu_i64, split_1d_uneven_2_splits) {
 
 TEST(split_gpu_f32, basic_split_concat_optimization) {
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32,format::bfyx,{ 1, 25, 1, 256 } });
+    auto input = engine.allocate_memory({ data_types::f32,format::bfyx,{ 1, 25, 1, 256 } });
     tests::set_random_values<float>(input);
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     std::vector<std::pair<primitive_id, tensor>> offsets;
     std::vector<primitive_id> ids;
     for (int i = 0; i < 25; i++)
@@ -235,8 +233,8 @@ TEST(split_gpu_f32, basic_split_concat_optimization) {
     auto outputs = network.execute();
 
     auto output = outputs.at("output").get_memory();
-    auto output_ptr = output.pointer<float>();
-    auto input_ptr = input.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
+    cldnn::mem_lock<float> input_ptr(input, get_test_stream());
 
     for (int i = 0; i < 25*256; ++i)
     {
@@ -246,13 +244,13 @@ TEST(split_gpu_f32, basic_split_concat_optimization) {
 
 TEST(split_gpu_i64, basic_split_concat_optimization) {
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::i64,format::bfyx,{ 1, 25, 1, 256 } });
+    auto input = engine.allocate_memory({ data_types::i64,format::bfyx,{ 1, 25, 1, 256 } });
     tests::set_random_values<int64_t>(input);
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     std::vector<std::pair<primitive_id, tensor>> offsets;
     std::vector<primitive_id> ids;
     for (int i = 0; i < 25; i++)
@@ -275,8 +273,8 @@ TEST(split_gpu_i64, basic_split_concat_optimization) {
     auto outputs = network.execute();
 
     auto output = outputs.at("output").get_memory();
-    auto output_ptr = output.pointer<int64_t>();
-    auto input_ptr = input.pointer<int64_t>();
+    cldnn::mem_lock<int64_t> output_ptr(output, get_test_stream());
+    cldnn::mem_lock<int64_t> input_ptr(input, get_test_stream());
 
     for (int i = 0; i < 25*256; ++i)
     {
@@ -520,17 +518,17 @@ TEST(split_gpu_f32, basic_in2x3x2x2_split_feature_bfyx) {
     //  id: "out1", offsets: { 0, 1, 0, 0 }
     //  id: "out2", offsets: { 0, 2, 0, 0 }
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     auto batch_num = 6;
     auto feature_num = 3;
     auto x_size = 4;
     auto y_size = 3;
 
-    auto input = memory::allocate(engine, { data_types::f32,format::bfyx,{ batch_num, feature_num, x_size, y_size } });
+    auto input = engine.allocate_memory({ data_types::f32,format::bfyx,{ batch_num, feature_num, x_size, y_size } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(split("split", "input",
     {
         { "out0", { 0, 0, 0, 0 } },
@@ -553,8 +551,8 @@ TEST(split_gpu_f32, basic_in2x3x2x2_split_feature_bfyx) {
     {
         auto split_id = "split:out" + std::to_string(i);
         auto output = outputs.at(split_id).get_memory();
-        auto output_ptr = output.pointer<float>();
-        check_feature_map<float>(output_ptr, input_vec, batch_num, feature_num, y_size, x_size, i, 1);
+        cldnn::mem_lock<float> output_ptr(output, get_test_stream());
+        check_feature_map<float>(output_ptr.data(), input_vec, batch_num, feature_num, y_size, x_size, i, 1);
     }
 }
 
@@ -566,17 +564,17 @@ TEST(split_gpu_i64, basic_in2x3x2x2_split_feature_bfyx) {
     //  id: "out1", offsets: { 0, 1, 0, 0 }
     //  id: "out2", offsets: { 0, 2, 0, 0 }
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     auto batch_num = 6;
     auto feature_num = 3;
     auto x_size = 4;
     auto y_size = 3;
 
-    auto input = memory::allocate(engine, { data_types::i64,format::bfyx,{ batch_num, feature_num, x_size, y_size } });
+    auto input = engine.allocate_memory({ data_types::i64,format::bfyx,{ batch_num, feature_num, x_size, y_size } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(split("split", "input",
     {
         { "out0", { 0, 0, 0, 0 } },
@@ -599,8 +597,8 @@ TEST(split_gpu_i64, basic_in2x3x2x2_split_feature_bfyx) {
     {
         auto split_id = "split:out" + std::to_string(i);
         auto output = outputs.at(split_id).get_memory();
-        auto output_ptr = output.pointer<int64_t>();
-        check_feature_map<int64_t>(output_ptr, input_vec, batch_num, feature_num, y_size, x_size, i, 1);
+        cldnn::mem_lock<int64_t> output_ptr(output, get_test_stream());
+        check_feature_map<int64_t>(output_ptr.data(), input_vec, batch_num, feature_num, y_size, x_size, i, 1);
     }
 }
 
@@ -613,23 +611,23 @@ TEST(split_gpu_f32, basic_in2x3x2x2_split_scale_feature_bfyx) {
     //  id: "out2", offsets: { 0, 2, 0, 0 }
     //  Additional scale layer at the end
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     auto batch_num = 6;
     auto feature_num = 3;
     auto x_size = 4;
     auto y_size = 3;
 
-    auto input = memory::allocate(engine, { data_types::f32,format::bfyx,{ batch_num, feature_num, x_size, y_size } });
-    auto scale_input0 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
-    auto scale_input1 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
-    auto scale_input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
+    auto input = engine.allocate_memory({ data_types::f32,format::bfyx,{ batch_num, feature_num, x_size, y_size } });
+    auto scale_input0 = engine.allocate_memory({ data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
+    auto scale_input1 = engine.allocate_memory({ data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
+    auto scale_input2 = engine.allocate_memory({ data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("scale_input0", scale_input0.get_layout()));
-    topology.add(input_layout("scale_input1", scale_input1.get_layout()));
-    topology.add(input_layout("scale_input2", scale_input2.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("scale_input0", scale_input0->get_layout()));
+    topology.add(input_layout("scale_input1", scale_input1->get_layout()));
+    topology.add(input_layout("scale_input2", scale_input2->get_layout()));
     topology.add(split("split", "input",
     {
         { "out0",{ 0, 0, 0, 0 } },
@@ -665,7 +663,7 @@ TEST(split_gpu_f32, basic_in2x3x2x2_split_scale_feature_bfyx) {
     {
         auto split_id = "scale" + std::to_string(i);
         auto output = outputs.at(split_id).get_memory();
-        auto output_ptr = output.pointer<float>();
-        check_feature_map<float>(output_ptr, input_vec, batch_num, feature_num, y_size, x_size, i, i + 1);
+        cldnn::mem_lock<float> output_ptr(output, get_test_stream());
+        check_feature_map<float>(output_ptr.data(), input_vec, batch_num, feature_num, y_size, x_size, i, i + 1);
     }
 }

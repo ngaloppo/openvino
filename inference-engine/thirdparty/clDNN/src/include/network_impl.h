@@ -27,7 +27,7 @@ class primitive_inst;
 struct network_impl {
 public:
     using ptr = std::shared_ptr<network_impl>;
-    explicit network_impl(program_impl::cptr program, stream::ptr stream, bool is_internal = false);
+    explicit network_impl(program_impl::ptr program, stream::ptr stream, bool is_internal = false);
     network_impl(engine& engine,
                  const topology_impl& topo,
                  const build_options& options = build_options(),
@@ -49,9 +49,10 @@ public:
                              bool is_internal);
 
     static ptr allocate_network(engine& engine,
-                                program_impl::cptr program,
+                                program_impl::ptr program,
                                 bool is_internal = false);
     program_impl::cptr get_program() const { return _program; }
+    program_impl::ptr get_program() { return _program; }
     engine& get_engine() const { return _program->get_engine(); }
 
     void reset_execution(bool wait = true);
@@ -97,7 +98,7 @@ public:
 
 private:
     uint32_t net_id = 0;
-    const program_impl::cptr _program;
+    program_impl::ptr _program;
     stream::ptr _stream;
     uint16_t _stream_id;
     bool _internal;

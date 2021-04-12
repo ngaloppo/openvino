@@ -14,16 +14,16 @@ using namespace ::tests;
 
 // select_gpu_f32
 TEST(select_gpu_f32, select_basic) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::yxfb, { 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values(input, {
@@ -59,7 +59,7 @@ TEST(select_gpu_f32, select_basic) {
                           15.f,   0.5f,   8.f,  12.f,
                            4.f,   6.5f,   8.f,  -2.5f };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -68,16 +68,16 @@ TEST(select_gpu_f32, select_basic) {
 }
 
 TEST(select_gpu_f32, select_basic_negative) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values(input, {
@@ -113,7 +113,7 @@ TEST(select_gpu_f32, select_basic_negative) {
         15.f,   0.5f,   8.f,  12.f,
         4.f,   6.5f,   8.f,  -2.5f };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -122,16 +122,16 @@ TEST(select_gpu_f32, select_basic_negative) {
 }
 
 TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_mask_2x2x1x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 1, 2 } });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 1, 2 } });
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input1", "input2"));
 
     set_values(input1, {
@@ -199,7 +199,7 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_mask_2x2x1x2) {
         -0.5f, -2.5f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -208,16 +208,16 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_mask_2x2x1x2) {
 }
 
 TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_mask_1x1x1x1) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::bfyx,{ 1, 1, 1, 1 } });
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input1", "input2"));
 
     set_values(input1, {
@@ -275,7 +275,7 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_mask_1x1x1x1) {
         -0.5f, -2.5f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -284,16 +284,16 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_mask_1x1x1x1) {
 }
 
 TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_mask_2x2x2x1) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::byxf, { 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::byxf ,{ 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::byxf, { 2, 2, 2, 1 } });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::byxf, { 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::byxf ,{ 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::byxf, { 2, 2, 2, 1 } });
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input1", "input2"));
 
     set_values(input1, {
@@ -355,7 +355,7 @@ TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_mask_2x2x2x1) {
         -0.5f, 8.f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -364,16 +364,16 @@ TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_mask_2x2x2x1) {
 }
 
 TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in2_2x2x1x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 1, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 1, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input1", "input2"));
 
     set_values(input1, {
@@ -441,7 +441,7 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in2_2x2x1x2) {
         8.f,   -0.5f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -450,16 +450,16 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in2_2x2x1x2) {
 }
 
 TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in1_2x2x2x1_bcast_in2_2x2x1x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 1 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 1, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 1 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 1, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input1", "input2"));
 
     set_values(input1, {
@@ -523,7 +523,7 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in1_2x2x2x1_bcast_in2_2x2x1
         4.f,   -0.5f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -532,16 +532,16 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in1_2x2x2x1_bcast_in2_2x2x1
 }
 
 TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_mask_2x1x2x2_in1_1x2x2x2_in2_2x2x1x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 1, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 1, 2, 2 } });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 1, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input1", "input2"));
 
     set_values(input1, {
@@ -597,7 +597,7 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_mask_2x1x2x2_in1_1x2x2x2_in
         -0.5f, 5.2f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -606,16 +606,16 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_mask_2x1x2x2_in1_1x2x2x2_in
 }
 
 TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_mask_2x1x2x2_in1_2x2x2x1_in2_2x2x1x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::byxf, { 2, 2, 2, 1 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::byxf ,{ 2, 2, 1, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::byxf, { 2, 1, 2, 2 } });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::byxf, { 2, 2, 2, 1 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::byxf ,{ 2, 2, 1, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::byxf, { 2, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input1", "input2"));
 
     set_values(input1, {
@@ -673,7 +673,7 @@ TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_mask_2x1x2x2_in1_2x2x
         -2.f,  6.5f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -682,16 +682,16 @@ TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_mask_2x1x2x2_in1_2x2x
 }
 
 TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in2_1x1x1x1) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 1, 1, 1 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 1, 1, 1 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input1", "input2"));
 
     set_values(input1, {
@@ -749,7 +749,7 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in2_1x1x1x1) {
         8.f,   1.f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -758,16 +758,16 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in2_1x1x1x1) {
 }
 
 TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_in2_2x2x2x1) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::byxf, { 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::byxf ,{ 2, 2, 2, 1 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::byxf, { 2, 2, 2, 2 } });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::byxf, { 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::byxf ,{ 2, 2, 2, 1 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::byxf, { 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input1", "input2"));
 
     set_values(input1, {
@@ -829,7 +829,7 @@ TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_in2_2x2x2x1) {
         8.f,  10.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -838,16 +838,16 @@ TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_in2_2x2x2x1) {
 }
 
 TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in1_2x2x1x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 1, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 1, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input1", "input2"));
 
     set_values(input1, {
@@ -915,7 +915,7 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in1_2x2x1x2) {
         8.f,   -2.5f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -924,16 +924,16 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in1_2x2x1x2) {
 }
 
 TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in1_1x1x1x1) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 1, 1, 1 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 1, 1, 1 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input1", "input2"));
 
     set_values(input1, {
@@ -991,7 +991,7 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in1_1x1x1x1) {
         1.f,   -2.5f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -1000,16 +1000,16 @@ TEST(select_gpu_f32, select_basic_bfyx_2x2x2x2_bcast_in1_1x1x1x1) {
 }
 
 TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_in1_2x2x2x1) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::byxf, { 2, 2, 2, 1 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::byxf ,{ 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::byxf, { 2, 2, 2, 2 } });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::byxf, { 2, 2, 2, 1 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::byxf ,{ 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::byxf, { 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input1", "input2"));
 
     set_values(input1, {
@@ -1071,7 +1071,7 @@ TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_in1_2x2x2x1) {
         7.f,  -2.5f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -1080,16 +1080,16 @@ TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_in1_2x2x2x1) {
 }
 
 TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_mask_2x1x2x2_in1_2x2x2x1) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::byxf, { 2, 2, 2, 1 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::byxf ,{ 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::byxf, { 2, 1, 2, 2 } });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::byxf, { 2, 2, 2, 1 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::byxf ,{ 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::byxf, { 2, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input1", "input2"));
 
     set_values(input1, {
@@ -1151,7 +1151,7 @@ TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_mask_2x1x2x2_in1_2x2x
         -0.5f, -2.5f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -1160,16 +1160,16 @@ TEST(select_gpu_f32, select_basic_comma_byxf_2x2x2x2_bcast_mask_2x1x2x2_in1_2x2x
 }
 
 TEST(select_gpu_f32, select_basic_comma) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values(input, {
@@ -1205,7 +1205,7 @@ TEST(select_gpu_f32, select_basic_comma) {
         15.f,   0.5f,   8.f,  12.f,
         4.f,   6.5f,   8.f,  -2.5f };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -1214,79 +1214,79 @@ TEST(select_gpu_f32, select_basic_comma) {
 }
 
 TEST(select_gpu_f32, select_basic_error_input_sizes) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 3, 4, 5, 6 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::yxfb,{ 3, 4, 5, 6 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     EXPECT_ANY_THROW(network(engine, topology));
 }
 
 TEST(select_gpu_f32, select_basic_error_mask_sizes) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::yxfb,{ 3, 4, 5, 6 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::yxfb,{ 3, 4, 5, 6 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     EXPECT_ANY_THROW(network(engine, topology));
 }
 
 TEST(select_gpu_f32, select_basic_error_input_types) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::i8, format::yxfb,{ 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::i8, format::yxfb,{ 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
     EXPECT_ANY_THROW(network(engine, topology));
 }
 
 TEST(select_gpu_f32, select_basic_error_input_formats) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::bfyx,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     EXPECT_ANY_THROW(network(engine, topology));
 }
 
 TEST(select_gpu_f32, select_basic_byxf) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::byxf,{ 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::byxf,{ 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::byxf,{ 2, 2, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::byxf,{ 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::byxf,{ 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::byxf,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values(input, {
@@ -1322,7 +1322,7 @@ TEST(select_gpu_f32, select_basic_byxf) {
         15.f,   0.5f,   8.f,  12.f,
         4.f,   6.5f,   8.f,  -2.5f };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -1331,16 +1331,16 @@ TEST(select_gpu_f32, select_basic_byxf) {
 }
 
 TEST(select_gpu_f32, select_basic_mask_f16) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f16, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f16, format::yxfb,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values(input, {
@@ -1376,7 +1376,7 @@ TEST(select_gpu_f32, select_basic_mask_f16) {
         15.f,   0.5f,   8.f,  12.f,
         4.f,   6.5f,   8.f,  -2.5f };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -1385,16 +1385,16 @@ TEST(select_gpu_f32, select_basic_mask_f16) {
 }
 
 TEST(select_gpu_f32, select_basic_mask_i8) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::i8, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::i8, format::yxfb,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values(input, {
@@ -1430,7 +1430,7 @@ TEST(select_gpu_f32, select_basic_mask_i8) {
         15.f,   0.5f,   8.f,  12.f,
         4.f,   6.5f,   8.f,  -2.5f };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -1439,16 +1439,16 @@ TEST(select_gpu_f32, select_basic_mask_i8) {
 }
 
 TEST(select_gpu_f32, select_basic_mask_u8) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::u8, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::yxfb,{ 2, 2, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::u8, format::yxfb,{ 2, 2, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values(input, {
@@ -1484,7 +1484,7 @@ TEST(select_gpu_f32, select_basic_mask_u8) {
         15.f,   0.5f,   8.f,  12.f,
         4.f,   6.5f,   8.f,  -2.5f };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 16; i++)
     {
@@ -1493,16 +1493,16 @@ TEST(select_gpu_f32, select_basic_mask_u8) {
 }
 
 TEST(select_gpu_f32, select_basic_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values(input, {
@@ -1530,7 +1530,7 @@ TEST(select_gpu_f32, select_basic_1x1x2x2) {
         0.5f,    2.5f,    2.f,    0.f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -1539,16 +1539,16 @@ TEST(select_gpu_f32, select_basic_1x1x2x2) {
 }
 
 TEST(select_gpu_f32, select_basic_bfyx_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::bfyx,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values(input, {
@@ -1580,7 +1580,7 @@ TEST(select_gpu_f32, select_basic_bfyx_1x1x2x2) {
         2.f,   0.f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -1589,16 +1589,16 @@ TEST(select_gpu_f32, select_basic_bfyx_1x1x2x2) {
 }
 
 TEST(select_gpu_f32, select_basic_byxf_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::byxf,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::byxf,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::byxf,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::byxf,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::byxf,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::byxf,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values(input, {
@@ -1630,7 +1630,7 @@ TEST(select_gpu_f32, select_basic_byxf_1x1x2x2) {
         2.f,   0.f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -1640,16 +1640,16 @@ TEST(select_gpu_f32, select_basic_byxf_1x1x2x2) {
 
 // select_gpu_f16
 TEST(select_gpu_f16, select_basic_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values<uint16_t>(input, {
@@ -1681,7 +1681,7 @@ TEST(select_gpu_f16, select_basic_1x1x2x2) {
         2,   0
     };
 
-    auto output_ptr = output.pointer<uint16_t>();
+    cldnn::mem_lock<uint16_t> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -1690,16 +1690,16 @@ TEST(select_gpu_f16, select_basic_1x1x2x2) {
 }
 
 TEST(select_gpu_f16, select_basic_mask_f32_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values<uint16_t>(input, {
@@ -1731,7 +1731,7 @@ TEST(select_gpu_f16, select_basic_mask_f32_1x1x2x2) {
         2,   0
     };
 
-    auto output_ptr = output.pointer<uint16_t>();
+    cldnn::mem_lock<uint16_t> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -1740,16 +1740,16 @@ TEST(select_gpu_f16, select_basic_mask_f32_1x1x2x2) {
 }
 
 TEST(select_gpu_f16, select_basic_mask_i8_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values<uint16_t>(input, {
@@ -1781,7 +1781,7 @@ TEST(select_gpu_f16, select_basic_mask_i8_1x1x2x2) {
         2,   0
     };
 
-    auto output_ptr = output.pointer<uint16_t>();
+    cldnn::mem_lock<uint16_t> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -1790,16 +1790,16 @@ TEST(select_gpu_f16, select_basic_mask_i8_1x1x2x2) {
 }
 
 TEST(select_gpu_f16, select_basic_mask_u8_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values<uint16_t>(input, {
@@ -1831,7 +1831,7 @@ TEST(select_gpu_f16, select_basic_mask_u8_1x1x2x2) {
         2,   0
     };
 
-    auto output_ptr = output.pointer<uint16_t>();
+    cldnn::mem_lock<uint16_t> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -1841,16 +1841,16 @@ TEST(select_gpu_f16, select_basic_mask_u8_1x1x2x2) {
 
 // select_gpu_i8
 TEST(select_gpu_i8, select_basic_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values<char>(input, {
@@ -1882,7 +1882,7 @@ TEST(select_gpu_i8, select_basic_1x1x2x2) {
         2,  0
     };
 
-    auto output_ptr = output.pointer<char>();
+    cldnn::mem_lock<char> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -1891,16 +1891,16 @@ TEST(select_gpu_i8, select_basic_1x1x2x2) {
 }
 
 TEST(select_gpu_i8, select_basic_mask_f32_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values<char>(input, {
@@ -1932,7 +1932,7 @@ TEST(select_gpu_i8, select_basic_mask_f32_1x1x2x2) {
         2,  0
     };
 
-    auto output_ptr = output.pointer<char>();
+    cldnn::mem_lock<char> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -1941,16 +1941,16 @@ TEST(select_gpu_i8, select_basic_mask_f32_1x1x2x2) {
 }
 
 TEST(select_gpu_i8, select_basic_mask_f16_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values<char>(input, {
@@ -1982,7 +1982,7 @@ TEST(select_gpu_i8, select_basic_mask_f16_1x1x2x2) {
         2,  0
     };
 
-    auto output_ptr = output.pointer<char>();
+    cldnn::mem_lock<char> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -1991,16 +1991,16 @@ TEST(select_gpu_i8, select_basic_mask_f16_1x1x2x2) {
 }
 
 TEST(select_gpu_i8, select_basic_mask_u8_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values<char>(input, {
@@ -2032,7 +2032,7 @@ TEST(select_gpu_i8, select_basic_mask_u8_1x1x2x2) {
         2,  0
     };
 
-    auto output_ptr = output.pointer<char>();
+    cldnn::mem_lock<char> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -2042,16 +2042,16 @@ TEST(select_gpu_i8, select_basic_mask_u8_1x1x2x2) {
 
 // select_gpu_u8
 TEST(select_gpu_u8, select_basic_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values<unsigned char>(input, {
@@ -2083,7 +2083,7 @@ TEST(select_gpu_u8, select_basic_1x1x2x2) {
         255,  0
     };
 
-    auto output_ptr = output.pointer<unsigned char>();
+    cldnn::mem_lock<unsigned char> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -2092,16 +2092,16 @@ TEST(select_gpu_u8, select_basic_1x1x2x2) {
 }
 
 TEST(select_gpu_u8, select_basic_mask_f32_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f32, format::yxfb,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values<unsigned char>(input, {
@@ -2133,7 +2133,7 @@ TEST(select_gpu_u8, select_basic_mask_f32_1x1x2x2) {
         255,  0
     };
 
-    auto output_ptr = output.pointer<unsigned char>();
+    cldnn::mem_lock<unsigned char> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -2142,16 +2142,16 @@ TEST(select_gpu_u8, select_basic_mask_f32_1x1x2x2) {
 }
 
 TEST(select_gpu_u8, select_basic_mask_f16_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::f16, format::yxfb,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values<unsigned char>(input, {
@@ -2183,7 +2183,7 @@ TEST(select_gpu_u8, select_basic_mask_f16_1x1x2x2) {
         255,  0
     };
 
-    auto output_ptr = output.pointer<unsigned char>();
+    cldnn::mem_lock<unsigned char> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {
@@ -2192,16 +2192,16 @@ TEST(select_gpu_u8, select_basic_mask_f16_1x1x2x2) {
 }
 
 TEST(select_gpu_u8, select_basic_mask_i8_1x1x2x2) {
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto input2 = memory::allocate(engine, { data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
-    auto mask = memory::allocate(engine, { data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto input2 = engine.allocate_memory({ data_types::u8, format::yxfb,{ 1, 1, 2, 2 } });
+    auto mask = engine.allocate_memory({ data_types::i8, format::yxfb,{ 1, 1, 2, 2 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
-    topology.add(input_layout("mask", mask.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
+    topology.add(input_layout("mask", mask->get_layout()));
     topology.add(cldnn::select("select", "mask", "input", "input2"));
 
     set_values<unsigned char>(input, {
@@ -2233,7 +2233,7 @@ TEST(select_gpu_u8, select_basic_mask_i8_1x1x2x2) {
         255,  0
     };
 
-    auto output_ptr = output.pointer<unsigned char>();
+    cldnn::mem_lock<unsigned char> output_ptr(output, get_test_stream());
 
     for (int i = 0; i < 4; i++)
     {

@@ -30,7 +30,6 @@
 #include <gmock/gmock.h>
 #include "float16.h"
 #include "random_gen.h"
-#include "instrumentation.h"
 #include "uniform_quantized_real_distribution.hpp"
 #include <src/include/to_string_utils.h>
 
@@ -45,7 +44,7 @@
 
 namespace tests {
 
-const cldnn::engine& get_test_engine();
+cldnn::engine& get_test_engine();
 const cldnn::stream& get_test_stream();
 
 #define USE_RANDOM_SEED 0
@@ -245,7 +244,7 @@ template <class T> void set_value(T* ptr, uint32_t index, T value) { ptr[index] 
 template <class T> T    get_value(T* ptr, uint32_t index) { return ptr[index]; }
 
 template<typename T>
-void set_values(const cldnn::memory& mem, std::initializer_list<T> args) {
+void set_values(cldnn::memory::ptr mem, std::initializer_list<T> args) {
     cldnn::mem_lock<T> ptr(mem, get_test_stream());
 
     auto it = ptr.begin();
@@ -254,7 +253,7 @@ void set_values(const cldnn::memory& mem, std::initializer_list<T> args) {
 }
 
 template<typename T>
-void set_values(const cldnn::memory& mem, std::vector<T> args) {
+void set_values(cldnn::memory::ptr mem, std::vector<T> args) {
     cldnn::mem_lock<T> ptr(mem, get_test_stream());
 
     auto it = ptr.begin();
@@ -263,10 +262,10 @@ void set_values(const cldnn::memory& mem, std::vector<T> args) {
 }
 
 template<typename T>
-void set_values_per_batch_and_feature(const cldnn::memory& mem, std::vector<T> args) {
+void set_values_per_batch_and_feature(cldnn::memory::ptr mem, std::vector<T> args) {
     cldnn::mem_lock<T> mem_ptr(mem, get_test_stream());
-    auto&& pitches = mem.get_layout().get_pitches();
-    auto&& size = mem.get_layout().size;
+    auto&& pitches = mem->get_layout().get_pitches();
+    auto&& size = mem->get_layout().size;
     for (cldnn::tensor::value_type b = 0; b < size.batch[0]; ++b) {
         for (cldnn::tensor::value_type f = 0; f < size.feature[0]; ++f) {
             for (cldnn::tensor::value_type y = 0; y < size.spatial[1]; ++y) {
@@ -282,7 +281,7 @@ void set_values_per_batch_and_feature(const cldnn::memory& mem, std::vector<T> a
 
 template<typename T, typename std::enable_if<std::is_floating_point<T>::value ||
                                              std::is_same<T, FLOAT16>::value>::type* = nullptr>
-void set_random_values(const cldnn::memory& mem, bool sign = false, unsigned significand_bit = 8, unsigned scale = 1)
+void set_random_values(cldnn::memory::ptr mem, bool sign = false, unsigned significand_bit = 8, unsigned scale = 1)
 {
     cldnn::mem_lock<T> ptr(mem, get_test_stream());
 
@@ -293,7 +292,7 @@ void set_random_values(const cldnn::memory& mem, bool sign = false, unsigned sig
 }
 
 template<class T, typename std::enable_if<std::is_integral<T>::value>::type* = nullptr>
-void set_random_values(const cldnn::memory& mem)
+void set_random_values(cldnn::memory::ptr mem)
 {
     cldnn::mem_lock<T> ptr(mem, get_test_stream());
 
@@ -425,7 +424,7 @@ public:
     void run_single_test();
 
     template<typename Type>
-    void compare_buffers(const cldnn::memory& out, const cldnn::memory& ref);
+    void compare_buffers(const cldnn::memory::ptr out, const cldnn::memory::ptr ref);
 
     static size_t get_linear_index(const cldnn::layout & layout, size_t b, size_t f, size_t y, size_t x, const memory_desc& desc);
     static size_t get_linear_index(const cldnn::layout & layout, size_t b, size_t f, size_t z, size_t y, size_t x, const memory_desc& desc);
@@ -448,7 +447,7 @@ public:
     };
 
 protected:
-    const cldnn::engine& engine = get_test_engine();
+    cldnn::engine& engine = get_test_engine();
     std::shared_ptr<test_params> generic_params;
     test_dump test_info;
     std::shared_ptr<cldnn::primitive> layer_params;

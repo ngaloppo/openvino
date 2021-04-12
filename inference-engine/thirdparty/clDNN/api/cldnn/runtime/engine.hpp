@@ -47,6 +47,7 @@ public:
     memory_ptr allocate_memory(const layout& layout);
     virtual memory_ptr reinterpret_handle(const layout& new_layout, shared_mem_params params) = 0;
     virtual memory_ptr reinterpret_buffer(const memory& memory, const layout& new_layout) = 0;
+    memory_ptr share_image(const layout& new_layout, shared_handle img);
 
     virtual bool is_the_same_buffer(const memory& mem1, const memory& mem2) = 0;
 
@@ -71,6 +72,10 @@ public:
     static std::shared_ptr<cldnn::engine> create(engine_types engine_type,
                                                  runtime_types runtime_type,
                                                  const device::ptr device,
+                                                 const engine_configuration& configuration = engine_configuration());
+
+    static std::shared_ptr<cldnn::engine> create(engine_types engine_type,
+                                                 runtime_types runtime_type,
                                                  const engine_configuration& configuration = engine_configuration());
 
 protected:

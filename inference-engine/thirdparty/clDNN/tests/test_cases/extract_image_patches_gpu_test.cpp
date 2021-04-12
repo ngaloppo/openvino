@@ -19,7 +19,7 @@ TEST(extract_image_patches_gpu, basic) {
     //  Output : 1x9x2x2
 
     tensor output_shape = {1, 9, 2, 2};
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
     auto batch = 1;
     auto depth = 1;
     auto in_rows = 10;
@@ -29,7 +29,7 @@ TEST(extract_image_patches_gpu, basic) {
     std::vector<unsigned int> rates = {1, 1};
     std::string auto_pad = "valid";
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
 
     std::vector<float> inputVals(batch * depth * in_rows * in_cols);
     std::generate(inputVals.begin(), inputVals.end(), []() {
@@ -40,7 +40,7 @@ TEST(extract_image_patches_gpu, basic) {
     set_values(input, inputVals);
 
     topology topology;
-    topology.add(input_layout("Input0", input.get_layout()));
+    topology.add(input_layout("Input0", input->get_layout()));
     topology.add(extract_image_patches("extract_image_patches", "Input0", sizes, strides, rates, auto_pad, output_shape));
 
     network network(engine, topology);
@@ -51,7 +51,7 @@ TEST(extract_image_patches_gpu, basic) {
     EXPECT_EQ(outputs.begin()->first, "extract_image_patches");
 
     auto output = outputs.at("extract_image_patches").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          1,  6,
@@ -92,7 +92,7 @@ TEST(extract_image_patches_gpu, basic2) {
     //  Input  : 1x1x10x10
     //  Output : 1x16x1x1
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
     auto batch = 1;
     auto depth = 1;
     auto in_rows = 10;
@@ -103,7 +103,7 @@ TEST(extract_image_patches_gpu, basic2) {
     std::string auto_pad = "valid";
     tensor output_shape = {1, 16, 1, 1};
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
 
     std::vector<float> inputVals(batch * depth * in_rows * in_cols);
     std::generate(inputVals.begin(), inputVals.end(), []() {
@@ -114,7 +114,7 @@ TEST(extract_image_patches_gpu, basic2) {
     set_values(input, inputVals);
 
     topology topology;
-    topology.add(input_layout("Input0", input.get_layout()));
+    topology.add(input_layout("Input0", input->get_layout()));
     topology.add(extract_image_patches("extract_image_patches", "Input0", sizes, strides, rates, auto_pad, output_shape));
 
     network network(engine, topology);
@@ -125,7 +125,7 @@ TEST(extract_image_patches_gpu, basic2) {
     EXPECT_EQ(outputs.begin()->first, "extract_image_patches");
 
     auto output = outputs.at("extract_image_patches").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          1,
@@ -156,7 +156,7 @@ TEST(extract_image_patches_gpu, basic3) {
     //  Input  : 1x1x10x10
     //  Output : 1x16x2x2
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
     auto batch = 1;
     auto depth = 1;
     auto in_rows = 10;
@@ -167,7 +167,7 @@ TEST(extract_image_patches_gpu, basic3) {
     std::string auto_pad = "same_upper";
     tensor output_shape = {1, 16, 2, 2};
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
 
     std::vector<float> inputVals(batch * depth * in_rows * in_cols);
     std::generate(inputVals.begin(), inputVals.end(), []() {
@@ -178,7 +178,7 @@ TEST(extract_image_patches_gpu, basic3) {
     set_values(input, inputVals);
 
     topology topology;
-    topology.add(input_layout("Input0", input.get_layout()));
+    topology.add(input_layout("Input0", input->get_layout()));
     topology.add(extract_image_patches("extract_image_patches", "Input0", sizes, strides, rates, auto_pad, output_shape));
 
     network network(engine, topology);
@@ -189,7 +189,7 @@ TEST(extract_image_patches_gpu, basic3) {
     EXPECT_EQ(outputs.begin()->first, "extract_image_patches");
 
     auto output = outputs.at("extract_image_patches").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          0,   0,
@@ -251,7 +251,7 @@ TEST(extract_image_patches_gpu, basic3_same_lower) {
     //  Input  : 1x1x10x10
     //  Output : 1x16x2x2
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
     auto batch = 1;
     auto depth = 1;
     auto in_rows = 10;
@@ -262,7 +262,7 @@ TEST(extract_image_patches_gpu, basic3_same_lower) {
     std::string auto_pad = "same_lower";
     tensor output_shape = {1, 16, 2, 2};
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
 
     std::vector<float> inputVals(batch * depth * in_rows * in_cols);
     std::generate(inputVals.begin(), inputVals.end(), []() {
@@ -273,7 +273,7 @@ TEST(extract_image_patches_gpu, basic3_same_lower) {
     set_values(input, inputVals);
 
     topology topology;
-    topology.add(input_layout("Input0", input.get_layout()));
+    topology.add(input_layout("Input0", input->get_layout()));
     topology.add(extract_image_patches("extract_image_patches", "Input0", sizes, strides, rates, auto_pad, output_shape));
 
     network network(engine, topology);
@@ -284,7 +284,7 @@ TEST(extract_image_patches_gpu, basic3_same_lower) {
     EXPECT_EQ(outputs.begin()->first, "extract_image_patches");
 
     auto output = outputs.at("extract_image_patches").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          0,   0,
@@ -346,7 +346,7 @@ TEST(extract_image_patches_gpu, basic3_enough_space) {
     //  Input  : 1x1x10x10
     //  Output : 1x9x2x2
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
     auto batch = 1;
     auto depth = 1;
     auto in_rows = 10;
@@ -357,7 +357,7 @@ TEST(extract_image_patches_gpu, basic3_enough_space) {
     std::string auto_pad = "same_upper";
     tensor output_shape = {1, 9, 2, 2};
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
 
     std::vector<float> inputVals(batch * depth * in_rows * in_cols);
     std::generate(inputVals.begin(), inputVals.end(), []() {
@@ -368,7 +368,7 @@ TEST(extract_image_patches_gpu, basic3_enough_space) {
     set_values(input, inputVals);
 
     topology topology;
-    topology.add(input_layout("Input0", input.get_layout()));
+    topology.add(input_layout("Input0", input->get_layout()));
     topology.add(extract_image_patches("extract_image_patches", "Input0", sizes, strides, rates, auto_pad, output_shape));
 
     network network(engine, topology);
@@ -379,7 +379,7 @@ TEST(extract_image_patches_gpu, basic3_enough_space) {
     EXPECT_EQ(outputs.begin()->first, "extract_image_patches");
 
     auto output = outputs.at("extract_image_patches").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          1,   8,
@@ -420,7 +420,7 @@ TEST(extract_image_patches_gpu, basic4) {
     //  Input  : 1x1x10x10
     //  Output : 1x9x2x2
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
     auto batch = 1;
     auto depth = 1;
     auto in_rows = 10;
@@ -431,7 +431,7 @@ TEST(extract_image_patches_gpu, basic4) {
     std::string auto_pad = "valid";
     tensor output_shape = {1, 9, 2, 2};
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
 
     std::vector<float> inputVals(batch * depth * in_rows * in_cols);
     std::generate(inputVals.begin(), inputVals.end(), []() {
@@ -442,7 +442,7 @@ TEST(extract_image_patches_gpu, basic4) {
     set_values(input, inputVals);
 
     topology topology;
-    topology.add(input_layout("Input0", input.get_layout()));
+    topology.add(input_layout("Input0", input->get_layout()));
     topology.add(extract_image_patches("extract_image_patches", "Input0", sizes, strides, rates, auto_pad, output_shape));
 
     network network(engine, topology);
@@ -453,7 +453,7 @@ TEST(extract_image_patches_gpu, basic4) {
     EXPECT_EQ(outputs.begin()->first, "extract_image_patches");
 
     auto output = outputs.at("extract_image_patches").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          1,   6,
@@ -494,7 +494,7 @@ TEST(extract_image_patches_gpu, basic5) {
     //  Input  : 1x2x5x5
     //  Output : 1x8x2x2
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
     auto batch = 1;
     auto depth = 2;
     auto in_rows = 5;
@@ -505,7 +505,7 @@ TEST(extract_image_patches_gpu, basic5) {
     std::string auto_pad = "valid";
     tensor output_shape = {1, 8, 2, 2};
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { batch, depth, in_cols, in_rows } });
 
     std::vector<float> inputVals(batch * depth * in_rows * in_cols);
     std::generate(inputVals.begin(), inputVals.end(), []() {
@@ -516,7 +516,7 @@ TEST(extract_image_patches_gpu, basic5) {
     set_values(input, inputVals);
 
     topology topology;
-    topology.add(input_layout("Input0", input.get_layout()));
+    topology.add(input_layout("Input0", input->get_layout()));
     topology.add(extract_image_patches("extract_image_patches", "Input0", sizes, strides, rates, auto_pad, output_shape));
 
     network network(engine, topology);
@@ -527,7 +527,7 @@ TEST(extract_image_patches_gpu, basic5) {
     EXPECT_EQ(outputs.begin()->first, "extract_image_patches");
 
     auto output = outputs.at("extract_image_patches").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          1,  4,

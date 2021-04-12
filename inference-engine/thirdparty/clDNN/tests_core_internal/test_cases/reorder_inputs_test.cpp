@@ -4,7 +4,7 @@
 
 #include "test_utils.h"
 
-#include "runtime/engine.h"
+#include "cldnn/runtime/engine.hpp"
 
 #include "program_impl.h"
 #include "data_inst.h"
@@ -31,13 +31,13 @@ TEST(reorder_inputs, propagation) {
     // Format of convolutions should be propagated through pooling.
     // At most single reorder should be inserted before first convolution.
 
-    auto engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f16, format::yxfb, { 2, 32, 1, 1 } });
-    auto weights = memory::allocate(engine, { data_types::f16, format::bfyx, { 32, 32, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f16, format::yxfb, { 2, 32, 1, 1 } });
+    auto weights = engine.allocate_memory({ data_types::f16, format::bfyx, { 32, 32, 1, 1 } });
 
     topology topology;
     topology.add(data("weights", weights));
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(convolution("conv1", "input", { "weights" }));
     topology.add(pooling("pool", "conv1", pooling_mode::max, { 1, 1, 1, 1 }, { 1, 1, 1, 1 }));
     topology.add(convolution("conv2", "pool", { "weights" }));
@@ -70,11 +70,11 @@ TEST(reorder_inputs, propagation) {
 }
 
 TEST(reorder_inputs, impl_forcing_basic_format) {
-    auto engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 2, 4, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 2, 4, 1 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(pooling("pool", "input", pooling_mode::max, { 1, 1, 2, 1 }, { 1, 1, 2, 1 }));
 
     implementation_desc pool_impl = { format::yxfb, "" };
@@ -91,14 +91,14 @@ TEST(reorder_inputs, impl_forcing_basic_format) {
     network.execute();
 
     auto network_impl = network.get();
-    auto& prog = network_impl->get_program();
-    auto& pool_node = prog.get_node("pool");
+    const auto& prog = network_impl->get_program();
+    auto& pool_node = prog->get_node("pool");
     auto pool_layout = pool_node.get_output_layout();
 
     EXPECT_EQ(pool_layout.format.value, format::yxfb);
 
     auto out_mem = network.get_output("pool").get_memory();
-    auto out_mem_ptr = out_mem.pointer<float>();
+    cldnn::mem_lock<float> out_mem_ptr(out_mem, get_test_stream());
 
     ASSERT_EQ(out_mem_ptr.size(), 4u);
 
@@ -109,11 +109,11 @@ TEST(reorder_inputs, impl_forcing_basic_format) {
 }
 
 TEST(reorder_inputs, impl_forcing_not_existing) {
-    auto engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 2, 4, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 2, 4, 1 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(pooling("pool", "input", pooling_mode::max, { 1, 1, 2, 1 }, { 1, 1, 2, 1 }));
 
     implementation_desc pool_impl = { format::any, "NOT_EXISTING" };
@@ -125,11 +125,11 @@ TEST(reorder_inputs, impl_forcing_not_existing) {
 }
 
 TEST(reorder_inputs, impl_forcing_basic_format_kernel) {
-    auto engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 2, 4, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 2, 4, 1 } });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(activation("actv", "input", activation_func::relu));
 
     implementation_desc actv_impl = { format::yxfb, "activation_ref" };
@@ -146,8 +146,8 @@ TEST(reorder_inputs, impl_forcing_basic_format_kernel) {
     network.execute();
 
     auto network_impl = network.get();
-    auto& prog = network_impl->get_program();
-    auto& node = prog.get_node("actv");
+    auto prog = network_impl->get_program();
+    auto& node = prog->get_node("actv");
     auto actv_layout = node.get_output_layout();
     auto kernel_name = node.get_selected_impl()->get_kernel_name();
 
@@ -155,7 +155,7 @@ TEST(reorder_inputs, impl_forcing_basic_format_kernel) {
     EXPECT_EQ(kernel_name, actv_impl.kernel_name);
 
     auto out_mem = network.get_output("actv").get_memory();
-    auto out_mem_ptr = out_mem.pointer<float>();
+    cldnn::mem_lock<float> out_mem_ptr(out_mem, get_test_stream());
 
     ASSERT_EQ(out_mem_ptr.size(), 8u);
 
@@ -171,13 +171,13 @@ TEST(reorder_inputs, impl_forcing_basic_format_kernel) {
 
 // TODO Not yet implemented
 //TEST(reorder_inputs, impl_forcing_conv_format_kernel) {
-//    auto engine = get_test_engine();
-//    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, {1, 2, 2, 2} });
-//    auto weights = memory::allocate(engine, { data_types::f32, format::bfyx, {2, 2, 1, 1} });
+//    auto& engine = get_test_engine();
+//    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, {1, 2, 2, 2} });
+//    auto weights = engine.allocate_memory({ data_types::f32, format::bfyx, {2, 2, 1, 1} });
 //
 //    topology topology;
 //    topology.add(data("weights", weights));
-//    topology.add(input_layout("input", input.get_layout()));
+//    topology.add(input_layout("input", input->get_layout()));
 //    topology.add(convolution("conv", "input", { "weights" }));
 //    topology.add(reorder("output", "conv", format::bfyx, data_types::f32));
 //
@@ -209,7 +209,7 @@ TEST(reorder_inputs, impl_forcing_basic_format_kernel) {
 //        EXPECT_EQ(conv_sel_impl->get_kernel_name(), impl.kernel);
 //
 //        auto out_mem = network.get_output("output").get_memory();
-//        auto out_mem_ptr = out_mem.pointer<float>();
+//        cldnn::mem_lock<float> out_mem_ptr(out_mem, get_test_stream());
 //
 //        EXPECT_EQ(out_mem_ptr.size(), 8);
 //

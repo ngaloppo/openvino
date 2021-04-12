@@ -26,15 +26,15 @@ TEST(resample_gpu, basic_in2x3x2x2_nearest) {
     //  f1: b0:  7    8  -16   b1:   12   9     -17
     //
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 3, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 3, 2 } });
 
     auto output_size = tensor(batch(2), feature(2), spatial(6, 4));
     uint32_t num_filter = 0u;
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(resample("upsampling", "input", output_size, num_filter, resample_type::nearest));
 
     set_values(input, {
@@ -55,7 +55,7 @@ TEST(resample_gpu, basic_in2x3x2x2_nearest) {
     auto outputs = net.execute();
 
     auto output = outputs.at("upsampling").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     float answers[96] = {
         1.f, 1.f, 2.f,   2.f,   -10.f,  -10.f,
@@ -98,15 +98,15 @@ TEST(resample_gpu, basic_in2x3x2x2_bilinear) {
     //  f0: b0:  3    4
     //
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
 
     auto output_size = tensor(batch(1), feature(1), spatial(4, 4));
     uint32_t num_filter = 1u;
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(resample("upsampling", "input", output_size, num_filter, resample_type::caffe_bilinear));
 
     set_values(input, {
@@ -120,9 +120,9 @@ TEST(resample_gpu, basic_in2x3x2x2_bilinear) {
     auto outputs = net.execute();
 
     auto output = outputs.at("upsampling").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
-    EXPECT_EQ(output.get_layout().get_linear_size(), (size_t) 16);
+    EXPECT_EQ(output->get_layout().get_linear_size(), (size_t) 16);
 
     float answers[16] = {
         1.f, 1.25f, 1.75f, 2.f,
@@ -149,14 +149,14 @@ TEST(resample_gpu, basic_in1x1x2x2_interp) {
     //  f0: b0:  3    4
     //
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
 
     auto output_size = tensor(batch(1), feature(1), spatial(4, 4));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(resample("upsampling", "input", output_size, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, resample_type::bilinear));
 
     set_values(input, {
@@ -170,9 +170,9 @@ TEST(resample_gpu, basic_in1x1x2x2_interp) {
     auto outputs = net.execute();
 
     auto output = outputs.at("upsampling").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
-    EXPECT_EQ(output.get_layout().get_linear_size(), (size_t) 16);
+    EXPECT_EQ(output->get_layout().get_linear_size(), (size_t) 16);
 
     float answers[16] = {
         1.0f, 1.5f, 2.0f, 2.0f,
@@ -199,14 +199,14 @@ TEST(resample_gpu, basic_in1x1x2x2_interp_f16) {
     //  f0: b0:  3    4
     //
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
 
     auto output_size = tensor(batch(1), feature(1), spatial(4, 4));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(reorder("input_to_b_fs_yx_fsv16", "input", format::b_fs_yx_fsv16, data_types::f32));
     topology.add(resample("resample", "input_to_b_fs_yx_fsv16", output_size, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, resample_type::bilinear));
     topology.add(reorder("res_to_bfyx", "resample", format::bfyx, data_types::f32));
@@ -225,12 +225,12 @@ TEST(resample_gpu, basic_in1x1x2x2_interp_f16) {
     auto outputs = net.execute();
 
     auto resample_out = outputs.at("resample").get_memory();
-    ASSERT_EQ(resample_out.get_layout().format, format::b_fs_yx_fsv16);
+    ASSERT_EQ(resample_out->get_layout().format, format::b_fs_yx_fsv16);
 
     auto output = outputs.at("res_to_bfyx").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
-    EXPECT_EQ(output.get_layout().get_linear_size(), (size_t) 16);
+    EXPECT_EQ(output->get_layout().get_linear_size(), (size_t) 16);
 
     float answers[16] = {
         1.0f, 1.5f, 2.0f, 2.0f,
@@ -257,14 +257,14 @@ TEST(resample_gpu, basic_in1x1x2x2_interp_fsv32) {
     //  f0: b0:  3    4
     //
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
 
     auto output_size = tensor(batch(1), feature(1), spatial(4, 4));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(reorder("input_to_fs_b_yx_fsv32", "input", format::fs_b_yx_fsv32, data_types::f16));
     topology.add(resample("resample", "input_to_fs_b_yx_fsv32", output_size, {0, 0, 0, 0}, {0, 0, 0, 0}, 0, resample_type::bilinear));
     topology.add(reorder("res_to_bfyx", "resample", format::bfyx, data_types::f32));
@@ -283,12 +283,12 @@ TEST(resample_gpu, basic_in1x1x2x2_interp_fsv32) {
     auto outputs = net.execute();
 
     auto resample_out = outputs.at("resample").get_memory();
-    ASSERT_EQ(resample_out.get_layout().format, format::fs_b_yx_fsv32);
+    ASSERT_EQ(resample_out->get_layout().format, format::fs_b_yx_fsv32);
 
     auto output = outputs.at("res_to_bfyx").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
-    EXPECT_EQ(output.get_layout().get_linear_size(), (size_t) 16);
+    EXPECT_EQ(output->get_layout().get_linear_size(), (size_t) 16);
 
     float answers[16] = {
         1.0f, 1.5f, 2.0f, 2.0f,
@@ -316,14 +316,14 @@ TEST(resample_gpu, basic_in1x1x2x2_interp_align_1) {
     //  f0: b0:  3    4
     //
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
 
     auto output_size = tensor(batch(1), feature(1), spatial(4, 4));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(resample("upsampling", "input", output_size, {0, 0, 0, 0}, {0, 0, 0, 0}, 1, resample_type::bilinear));
 
     set_values(input, {
@@ -337,9 +337,9 @@ TEST(resample_gpu, basic_in1x1x2x2_interp_align_1) {
     auto outputs = net.execute();
 
     auto output = outputs.at("upsampling").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
-    EXPECT_EQ(output.get_layout().get_linear_size(), (size_t) 16);
+    EXPECT_EQ(output->get_layout().get_linear_size(), (size_t) 16);
 
     float answers[16] = {
             1.000000f, 1.333333f, 1.666667f, 2.000000f,
@@ -366,15 +366,15 @@ TEST(resample_gpu, nearest_asymmetric) {
     //  f0: b0:  3    4
     //
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
 
     auto output_size = tensor(batch(1), feature(1), spatial(5, 4));
 
     topology topology;
     uint32_t num_filter = 1u;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(resample("upsampling", "input", output_size, num_filter, resample_type::nearest));
 
     set_values(input, {
@@ -388,9 +388,9 @@ TEST(resample_gpu, nearest_asymmetric) {
     auto outputs = net.execute();
 
     auto output = outputs.at("upsampling").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
-    EXPECT_EQ(output.get_layout().get_linear_size(), (size_t)20);
+    EXPECT_EQ(output->get_layout().get_linear_size(), (size_t)20);
 
     float answers[20] = {
         1.f, 1.f, 1.f, 2.f, 2.f,
@@ -417,15 +417,15 @@ TEST(resample_gpu, nearest_asymmetric_i8) {
     //  f0: b0:  3    4
     //
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::i8, format::bfyx, { 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::i8, format::bfyx, { 1, 1, 2, 2 } });
 
     auto output_size = tensor(batch(1), feature(1), spatial(5, 4));
 
     topology topology;
     uint32_t num_filter = 1u;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(resample("upsampling", "input", output_size, num_filter, resample_type::nearest));
 
     set_values<int8_t>(input, {
@@ -439,9 +439,9 @@ TEST(resample_gpu, nearest_asymmetric_i8) {
     auto outputs = net.execute();
 
     auto output = outputs.at("upsampling").get_memory();
-    auto output_ptr = output.pointer<int8_t>();
+    cldnn::mem_lock<int8_t> output_ptr(output, get_test_stream());
 
-    EXPECT_EQ(output.get_layout().get_linear_size(), (size_t)20);
+    EXPECT_EQ(output->get_layout().get_linear_size(), (size_t)20);
 
     int8_t answers[20] = {
             1, 1, 1, 2, 2,
@@ -468,15 +468,15 @@ TEST(resample_gpu, bilinear_asymmetric) {
     //  f0: b0:  3    4
     //
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 1, 2, 2 } });
 
     auto output_size = tensor(batch(1), feature(1), spatial(6, 4));
 
     topology topology;
     uint32_t num_filter = 1u;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(resample("upsampling", "input", output_size, num_filter, resample_type::caffe_bilinear));
 
     set_values(input, {
@@ -490,9 +490,9 @@ TEST(resample_gpu, bilinear_asymmetric) {
     auto outputs = net.execute();
 
     auto output = outputs.at("upsampling").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
-    EXPECT_EQ(output.get_layout().get_linear_size(), (size_t)24);
+    EXPECT_EQ(output->get_layout().get_linear_size(), (size_t)24);
 
     float answers[24] = {
         1.f, 1.f, 1.33333f, 1.66667f, 2.f, 2.f,
@@ -522,21 +522,21 @@ struct resample_random_test_params {
 
 struct resample_random_test : testing::TestWithParam<resample_random_test_params>{
     template <typename T>
-    void fill_random_typed(memory& mem, int min, int max, int k) {
-        auto size = mem.get_layout().size;
+    void fill_random_typed(memory::ptr mem, int min, int max, int k) {
+        auto size = mem->get_layout().size;
         size_t b = size.batch[0];
         size_t f = size.feature[0];
         size_t x = size.spatial[0];
         size_t y = size.spatial[1];
 
         auto data = generate_random_4d<T>(b, f, y, x, min, max, k);
-        auto ptr = mem.pointer<T>();
+        cldnn::mem_lock<T> ptr(mem, get_test_stream());
         for (size_t bi = 0; bi < b; ++bi) {
             for (size_t fi = 0; fi < f; ++fi) {
                 for (size_t yi = 0; yi < y; ++yi) {
                     for (size_t xi = 0; xi < x; ++xi) {
                         auto coords = tensor(batch(bi), feature(fi), spatial(xi, yi, 0, 0));
-                        auto offset = mem.get_layout().get_linear_offset(coords);
+                        auto offset = mem->get_layout().get_linear_offset(coords);
                         ptr[offset] = data[bi][fi][yi][xi];
                     }
                 }
@@ -544,8 +544,8 @@ struct resample_random_test : testing::TestWithParam<resample_random_test_params
         }
     }
 
-    void fill_random(memory& mem) {
-        auto dt = mem.get_layout().data_type;
+    void fill_random(memory::ptr mem) {
+        auto dt = mem->get_layout().data_type;
         switch (dt) {
         case data_types::f32:
             fill_random_typed<float>(mem, -127, 127, 2);
@@ -565,19 +565,19 @@ struct resample_random_test : testing::TestWithParam<resample_random_test_params
     }
 
     template <typename T>
-    void compare_nearest_typed(const memory& input, const memory& output, uint32_t align_corners) {
-        auto output_lay = output.get_layout();
+    void compare_nearest_typed(const memory::ptr input, const memory::ptr output, uint32_t align_corners) {
+        auto output_lay = output->get_layout();
         size_t b = output_lay.size.batch[0];
         size_t f = output_lay.size.feature[0];
         size_t x = output_lay.size.spatial[0];
         size_t y = output_lay.size.spatial[1];
-        size_t in_x = input.get_layout().size.spatial[0];
-        size_t in_y = input.get_layout().size.spatial[1];
+        size_t in_x = input->get_layout().size.spatial[0];
+        size_t in_y = input->get_layout().size.spatial[1];
         float x_ratio = x > align_corners ? static_cast<float>(in_x - align_corners) / static_cast<float>(x - align_corners) : 0.f;
         float y_ratio = y > align_corners ? static_cast<float>(in_y - align_corners) / static_cast<float>(y - align_corners) : 0.f;
 
-        auto in_ptr = input.pointer<T>();
-        auto out_ptr = output.pointer<T>();
+        cldnn::mem_lock<T> in_ptr(input, get_test_stream());
+        cldnn::mem_lock<T> out_ptr(output, get_test_stream());
         for (size_t bi = 0; bi < b; ++bi) {
             for (size_t fi = 0; fi < f; ++fi) {
                 for (size_t yi = 0; yi < y; ++yi) {
@@ -585,10 +585,10 @@ struct resample_random_test : testing::TestWithParam<resample_random_test_params
                         auto in_xi = static_cast<size_t>(floor(x_ratio * xi));
                         auto in_yi = static_cast<size_t>(floor(y_ratio * yi));
                         auto in_coords = tensor(batch(bi), feature(fi), spatial(in_xi, in_yi, 0, 0));
-                        auto in_offset = input.get_layout().get_linear_offset(in_coords);
+                        auto in_offset = input->get_layout().get_linear_offset(in_coords);
                         auto in_val = in_ptr[in_offset];
                         auto out_coords = tensor(batch(bi), feature(fi), spatial(xi, yi, 0, 0));
-                        auto out_offset = output.get_layout().get_linear_offset(out_coords);
+                        auto out_offset = output->get_layout().get_linear_offset(out_coords);
                         auto out_val = out_ptr[out_offset];
                         EXPECT_EQ(in_val, out_val) << " at bi=" << bi << ", fi=" << fi << ", xi=" << xi << ", yi=" << yi;
                     }
@@ -598,20 +598,20 @@ struct resample_random_test : testing::TestWithParam<resample_random_test_params
     }
 
     template <typename InT, typename OutT>
-    void compare_bilinear_typed(const memory& input, const memory& output, uint32_t align_corners) {
-        auto output_lay = output.get_layout();
+    void compare_bilinear_typed(const memory::ptr input, const memory::ptr output, uint32_t align_corners) {
+        auto output_lay = output->get_layout();
         size_t b = output_lay.size.batch[0];
         size_t f = output_lay.size.feature[0];
         size_t x = output_lay.size.spatial[0];
         size_t y = output_lay.size.spatial[1];
-        auto input_lay = input.get_layout();
+        auto input_lay = input->get_layout();
         size_t in_x = input_lay.size.spatial[0];
         size_t in_y = input_lay.size.spatial[1];
         float x_ratio = x > align_corners ? static_cast<float>(in_x - align_corners) / static_cast<float>(x - align_corners) : 0.f;
         float y_ratio = y > align_corners ? static_cast<float>(in_y - align_corners) / static_cast<float>(y - align_corners) : 0.f;
 
-        auto in_ptr = input.pointer<InT>();
-        auto out_ptr = output.pointer<OutT>();
+        cldnn::mem_lock<InT> in_ptr(input, get_test_stream());
+        cldnn::mem_lock<OutT> out_ptr(output, get_test_stream());
         for (size_t bi = 0; bi < b; ++bi) {
             for (size_t fi = 0; fi < f; ++fi) {
                 for (size_t yi = 0; yi < y; ++yi) {
@@ -655,8 +655,8 @@ struct resample_random_test : testing::TestWithParam<resample_random_test_params
         }
     }
 
-    void compare(const memory& input, const memory& output, resample_type operation, uint32_t align_corners) {
-        auto dt = input.get_layout().data_type;
+    void compare(const memory::ptr input, const memory::ptr output, resample_type operation, uint32_t align_corners) {
+        auto dt = input->get_layout().data_type;
         if (operation == resample_type::nearest) {
             // Nearest resampling implicitly ignores align_corners
             if (dt == data_types::f32) {
@@ -688,7 +688,7 @@ struct resample_random_test : testing::TestWithParam<resample_random_test_params
     }
 
     void execute(const resample_random_test_params& params) {
-        auto eng = get_test_engine();
+        auto& engine = get_test_engine();
 
         auto in_layout = layout(params.input_type, params.in_format, params.input_size);
 
@@ -701,9 +701,9 @@ struct resample_random_test : testing::TestWithParam<resample_random_test_params
         auto build_opts = build_options(
             build_option::force_implementations({ {"resample", {params.out_format, ""}} })
         );
-        auto net = network(eng, topo, build_opts);
+        auto net = network(engine, topo, build_opts);
 
-        auto in_mem = memory::allocate(eng, in_layout);
+        auto in_mem = engine.allocate_memory(in_layout);
         fill_random(in_mem);
         net.set_input_data("in", in_mem);
 
@@ -966,19 +966,19 @@ TEST(resample_gpu, interpolate_in2x2x3x2_nearest1) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 2;
     int f = 2;
     int y = 3;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     auto output_size = tensor(batch(b), feature(f), spatial(x*2, y*2));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::nearest;
@@ -1006,7 +1006,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_nearest1) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     float answers[96] = {
          0.f,  1.f,  1.f,  1.f,
@@ -1055,19 +1055,19 @@ TEST(resample_gpu, interpolate_in2x2x3x2_nearest2) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 2;
     int f = 2;
     int y = 3;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     auto output_size = tensor(batch(b), feature(f), spatial(x*2, y*2));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::nearest;
@@ -1095,7 +1095,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_nearest2) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     float answers[96] = {
          0.f,  0.f,  1.f,  1.f,
@@ -1144,19 +1144,19 @@ TEST(resample_gpu, interpolate_in2x2x3x2_nearest3) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 2;
     int f = 2;
     int y = 3;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     auto output_size = tensor(batch(b), feature(f), spatial(x*2, y*2));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::nearest;
@@ -1184,7 +1184,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_nearest3) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     float answers[96] = {
          0.f,  0.f,  1.f,  1.f,
@@ -1233,19 +1233,19 @@ TEST(resample_gpu, interpolate_in2x2x3x2_nearest4) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 2;
     int f = 2;
     int y = 3;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     auto output_size = tensor(batch(b), feature(f), spatial(x*2, y*2));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::nearest;
@@ -1273,7 +1273,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_nearest4) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     float answers[96] = {
          0.f,  0.f,  0.f,  1.f,
@@ -1322,19 +1322,19 @@ TEST(resample_gpu, interpolate_in2x2x3x2_nearest5) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 2;
     int f = 2;
     int y = 3;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     auto output_size = tensor(batch(b), feature(f), spatial(x*2, y*2));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::nearest;
@@ -1362,7 +1362,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_nearest5) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     float answers[96] = {
          0.f,  0.f,  0.f,  1.f,
@@ -1411,21 +1411,21 @@ TEST(resample_gpu, interpolate_in2x2x3x2_coord_transform_mode1) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 2;
     int f = 2;
     int y = 3;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     y = 2;
     x = 3;
     auto output_size = tensor(batch(b), feature(f), spatial(x, y));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::nearest;
@@ -1453,7 +1453,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_coord_transform_mode1) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          0.f,  0.f,  1.f,
@@ -1480,21 +1480,21 @@ TEST(resample_gpu, interpolate_in2x2x3x2_coord_transform_mode2) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 2;
     int f = 2;
     int y = 3;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     y = 1;
     x = 3;
     auto output_size = tensor(batch(b), feature(f), spatial(x, y));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::nearest;
@@ -1522,7 +1522,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_coord_transform_mode2) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          0.f,  0.f,  1.f,
@@ -1543,21 +1543,21 @@ TEST(resample_gpu, interpolate_in2x2x3x2_coord_transform_mode3) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 2;
     int f = 2;
     int y = 3;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     y = 2;
     x = 3;
     auto output_size = tensor(batch(b), feature(f), spatial(x, y));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::nearest;
@@ -1585,7 +1585,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_coord_transform_mode3) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          0.f,  1.f,  1.f,
@@ -1612,21 +1612,21 @@ TEST(resample_gpu, interpolate_in2x2x3x2_coord_transform_mode4) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 2;
     int f = 2;
     int y = 3;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     y = 2;
     x = 3;
     auto output_size = tensor(batch(b), feature(f), spatial(x, y));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::nearest;
@@ -1654,7 +1654,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_coord_transform_mode4) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          2.f,  3.f,  3.f,
@@ -1681,21 +1681,21 @@ TEST(resample_gpu, interpolate_in2x2x3x2_coord_transform_mode5) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 2;
     int f = 2;
     int y = 3;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     y = 2;
     x = 3;
     auto output_size = tensor(batch(b), feature(f), spatial(x, y));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::nearest;
@@ -1723,7 +1723,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_coord_transform_mode5) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          0.f,  0.f,  1.f,
@@ -1750,21 +1750,21 @@ TEST(resample_gpu, interpolate_in2x2x3x2_cubic) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 2;
     int f = 2;
     int y = 3;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     y = 2;
     x = 3;
     auto output_size = tensor(batch(b), feature(f), spatial(x, y));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::cubic;
@@ -1790,7 +1790,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_cubic) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          0.29600694f,  0.8828125f,  1.46961806f,
@@ -1817,20 +1817,20 @@ TEST(resample_gpu, interpolate_in2x2x3x2_cubic2) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 1;
     int f = 1;
     int y = 3;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     x = 3;
     auto output_size = tensor(batch(b), feature(f), spatial(x, y));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::cubic;
@@ -1850,7 +1850,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_cubic2) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
           5.34722222f,  3.f, 0.65277778f,
@@ -1869,21 +1869,21 @@ TEST(resample_gpu, interpolate_in2x2x3x2_linear) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 2;
     int f = 2;
     int y = 3;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     y = 2;
     x = 3;
     auto output_size = tensor(batch(b), feature(f), spatial(x, y));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::caffe_bilinear;
@@ -1909,7 +1909,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_linear) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          0.5f,  1.f,  1.5f,
@@ -1936,21 +1936,21 @@ TEST(resample_gpu, interpolate_in2x2x3x2_linear_onnx) {
     //  Output : 2x2x6x4
     //  Sample Type: Nearest
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 1;
     int f = 1;
     int y = 2;
     int x = 2;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     y = 4;
     x = 4;
     auto output_size = tensor(batch(b), feature(f), spatial(x, y));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::bilinear;
@@ -1971,7 +1971,7 @@ TEST(resample_gpu, interpolate_in2x2x3x2_linear_onnx) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
              1.f, 1.33333f, 1.66667f,      2.f,
@@ -1991,21 +1991,21 @@ TEST(resample_gpu, interpolate_in1x1x2x4_linear_scale) {
     //  Output : 1x1x1x2
     //  Sample Type: Linear
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
 
     int b = 1;
     int f = 1;
     int y = 2;
     int x = 4;
     tensor shape = tensor{batch(b), feature(f), spatial(x, y)};
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, shape });
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, shape });
 
     y = 1;
     x = 2;
     auto output_size = tensor(batch(b), feature(f), spatial(x, y));
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     int32_t antialias = 0;
     float cube_coeff = -0.75f;
     resample_type mode = resample_type::caffe_bilinear;
@@ -2028,7 +2028,7 @@ TEST(resample_gpu, interpolate_in1x1x2x4_linear_scale) {
     auto outputs = net.execute();
 
     auto output = outputs.at("interpolate").get_memory();
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     std::vector<float> answers = {
          2.6666665f,  4.3333331f

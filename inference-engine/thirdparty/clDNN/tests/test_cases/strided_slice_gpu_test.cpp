@@ -20,11 +20,11 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x2_full) {
     // Stride (BFYX): 1x1x1x1
     // Output (BFYX): 2x2x2x2
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f,
@@ -41,7 +41,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x2_full) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -61,7 +61,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x2_full) {
     std::vector<float> answers = {
             0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     ASSERT_EQ(output_ptr.size(), answers.size());
     for (size_t i = 0; i < answers.size(); ++i)
@@ -77,11 +77,11 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x2_full) {
     // Stride (BFYX): 1x1x1x1
     // Output (BFYX): 2x2x2x2
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f,
@@ -98,7 +98,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x2_full) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -118,7 +118,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x2_full) {
     std::vector<float> answers = {
             0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     ASSERT_EQ(output_ptr.size(), answers.size());
     for (size_t i = 0; i < answers.size(); ++i)
@@ -134,11 +134,11 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x2_ignore) {
     // Stride (BFYX): 1x1x1x1
     // Output (BFYX): 2x2x2x2
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f,
@@ -155,7 +155,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x2_ignore) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -177,7 +177,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x2_ignore) {
         9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     ASSERT_EQ(output_ptr.size(), answers.size());
     for (size_t i = 0; i < answers.size(); ++i)
@@ -193,11 +193,11 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x2_ignore) {
     // Stride (BFYX): 1x1x1x1
     // Output (BFYX): 2x2x2x2
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f,
@@ -214,7 +214,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x2_ignore) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -236,7 +236,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x2_ignore) {
         9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     ASSERT_EQ(output_ptr.size(), answers.size());
     for (size_t i = 0; i < answers.size(); ++i)
@@ -252,11 +252,11 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x2_single) {
     // Stride (BFYX): 1x1x1x1
     // Output (BFYX): 1x1x1x1
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f,
@@ -273,7 +273,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x2_single) {
                });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -292,7 +292,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x2_single) {
 
     std::vector<float> answers = { 15.f };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     ASSERT_EQ(output_ptr.size(), answers.size());
     for (size_t i = 0; i < answers.size(); ++i)
@@ -308,11 +308,11 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x2_single) {
     // Stride (BFYX): 1x1x1x1
     // Output (BFYX): 1x1x1x1
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f,
@@ -329,7 +329,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x2_single) {
                });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -348,7 +348,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x2_single) {
 
     std::vector<float> answers = { 15.f };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     ASSERT_EQ(output_ptr.size(), answers.size());
     for (size_t i = 0; i < answers.size(); ++i)
@@ -364,11 +364,11 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x4x3_stride) {
     // Stride (BFYX): 1x1x2x1
     // Output (BFYX): 2x2x2x3
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 3, 4 } });
-    auto begin = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 3, 4 } });
+    auto begin = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f,
@@ -389,7 +389,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x4x3_stride) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -411,7 +411,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x4x3_stride) {
             24.f, 25.f, 26.f, 30.f, 31.f, 32.f, 36.f, 37.f, 38.f, 42.f, 43.f, 44.f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     ASSERT_EQ(output_ptr.size(), answers.size());
     for (size_t i = 0; i < answers.size(); ++i)
@@ -427,11 +427,11 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x4x3_stride) {
     // Stride (BFYX): 1x1x2x1
     // Output (BFYX): 2x2x2x3
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 3, 4 } });
-    auto begin = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 3, 4 } });
+    auto begin = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f,
@@ -452,7 +452,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x4x3_stride) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -474,7 +474,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x4x3_stride) {
             24.f, 25.f, 26.f, 30.f, 31.f, 32.f, 36.f, 37.f, 38.f, 42.f, 43.f, 44.f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     ASSERT_EQ(output_ptr.size(), answers.size());
     for (size_t i = 0; i < answers.size(); ++i)
@@ -490,11 +490,11 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x4x4_part_stride) {
     // Stride (BFYX): 1x1x1x2
     // Output (BFYX): 1x2x4x2
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 4, 4 } });
-    auto begin = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 4, 4 } });
+    auto begin = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f,
@@ -528,7 +528,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x4x4_part_stride) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -557,7 +557,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x4x4_part_stride) {
             61.0f, 63.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     ASSERT_EQ(output_ptr.size(), answers.size());
     for (size_t i = 0; i < answers.size(); ++i)
@@ -573,11 +573,11 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x4x4_part_stride) {
     // Stride (BFYX): 1x1x1x2
     // Output (BFYX): 1x2x4x2
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 4, 4 } });
-    auto begin = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 4, 4 } });
+    auto begin = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f,
@@ -611,7 +611,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x4x4_part_stride) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -640,7 +640,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x4x4_part_stride) {
             61.0f, 63.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     ASSERT_EQ(output_ptr.size(), answers.size());
     for (size_t i = 0; i < answers.size(); ++i)
@@ -654,11 +654,11 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x4x1_new_axis_mask) {
     // New_axis_mask: 1
     // Output (BFYX): 1x2x2x4
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 1, 4 } });
-    auto begin = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 1, 4 } });
+    auto begin = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f,
@@ -675,7 +675,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x4x1_new_axis_mask) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -697,7 +697,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x4x1_new_axis_mask) {
             10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (size_t i = 0; i < answers.size(); ++i)
     {
@@ -710,11 +710,11 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x4x1_new_axis_mask) {
     // New_axis_mask: 1
     // Output (BFYX): 1x2x2x4
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 1, 4 } });
-    auto begin = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 1, 4 } });
+    auto begin = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f,
@@ -731,7 +731,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x4x1_new_axis_mask) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -753,7 +753,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x4x1_new_axis_mask) {
             10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (size_t i = 0; i < answers.size(); ++i)
     {
@@ -766,11 +766,11 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x1x1_new_axis_mask_2) {
     // New_axis_mask: 101
     // Output (BFYX): 1x2x1x2
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 1, 1 } });
-    auto begin = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 1, 1 } });
+    auto begin = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f
@@ -786,7 +786,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x1x1_new_axis_mask_2) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -807,7 +807,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x1x1_new_axis_mask_2) {
             0.0f, 1.0f, 2.0f, 3.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (size_t i = 0; i < answers.size(); ++i)
     {
@@ -820,11 +820,11 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x1x1_new_axis_mask_2) {
     // New_axis_mask: 101
     // Output (BFYX): 1x2x1x2
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 1, 1 } });
-    auto begin = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 1, 1 } });
+    auto begin = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f
@@ -840,7 +840,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x1x1_new_axis_mask_2) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -861,7 +861,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x1x1_new_axis_mask_2) {
             0.0f, 1.0f, 2.0f, 3.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (size_t i = 0; i < answers.size(); ++i)
     {
@@ -873,11 +873,11 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x1x1) {
     // Input (BFYX): 2x2x1x1
     // Output (BFYX): 2x2x1x1
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 1, 1 } });
-    auto begin = memory::allocate(engine, { data_types::i32, format::bfyx, { 2, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i32, format::bfyx, { 2, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i32, format::bfyx, { 2, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 1, 1 } });
+    auto begin = engine.allocate_memory({ data_types::i32, format::bfyx, { 2, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i32, format::bfyx, { 2, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i32, format::bfyx, { 2, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f
@@ -893,7 +893,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x1x1) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -914,7 +914,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x1x1) {
             0.0f, 1.0f, 2.0f, 3.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (size_t i = 0; i < answers.size(); ++i)
     {
@@ -926,11 +926,11 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x1x1) {
     // Input (BFYX): 2x2x1x1
     // Output (BFYX): 2x2x1x1
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 1, 1 } });
-    auto begin = memory::allocate(engine, { data_types::i64, format::bfyx, { 2, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i64, format::bfyx, { 2, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i64, format::bfyx, { 2, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 1, 1 } });
+    auto begin = engine.allocate_memory({ data_types::i64, format::bfyx, { 2, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i64, format::bfyx, { 2, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i64, format::bfyx, { 2, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f
@@ -946,7 +946,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x1x1) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -967,7 +967,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x1x1) {
             0.0f, 1.0f, 2.0f, 3.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (size_t i = 0; i < answers.size(); ++i)
     {
@@ -979,11 +979,11 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x1x1) {
     // Input (BFZYX): 2x2x2x1x1
     // Output (BFZYX): 1x2x2x1x1
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfzyx, { 2, 2, 1, 1, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfzyx, { 2, 2, 1, 1, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f
@@ -999,7 +999,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x1x1) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -1020,7 +1020,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x1x1) {
             0.0f, 1.0f, 2.0f, 3.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (size_t i = 0; i < answers.size(); ++i)
     {
@@ -1032,11 +1032,11 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x1x1) {
     // Input (BFZYX): 2x2x2x1x1
     // Output (BFZYX): 1x2x2x1x1
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfzyx, { 2, 2, 1, 1, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfzyx, { 2, 2, 1, 1, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f
@@ -1052,7 +1052,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x1x1) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -1073,7 +1073,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x1x1) {
             0.0f, 1.0f, 2.0f, 3.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (size_t i = 0; i < answers.size(); ++i)
     {
@@ -1085,11 +1085,11 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x1x1_2) {
     // Input (BFZYX): 2x2x2x1x1
     // Output (BFZYX): 2x1x1x1x1
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfzyx, { 2, 2, 1, 1, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfzyx, { 2, 2, 1, 1, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f
@@ -1105,7 +1105,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x1x1_2) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -1126,7 +1126,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x1x1_2) {
             0.0f, 4.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (size_t i = 0; i < answers.size(); ++i)
     {
@@ -1138,11 +1138,11 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x1x1_2) {
     // Input (BFZYX): 2x2x2x1x1
     // Output (BFZYX): 2x1x1x1x1
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfzyx, { 2, 2, 1, 1, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfzyx, { 2, 2, 1, 1, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f
@@ -1158,7 +1158,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x1x1_2) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -1179,7 +1179,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x1x1_2) {
             0.0f, 4.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (size_t i = 0; i < answers.size(); ++i)
     {
@@ -1194,11 +1194,11 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x2_full_negative_stride) {
     // Stride (BFYX): -1x1x1x1
     // Output (BFYX): 2x2x2x2
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i32, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f,
@@ -1215,7 +1215,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x2_full_negative_stride) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -1235,7 +1235,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x2_full_negative_stride) {
     std::vector<float> answers = {
             12.f, 13.f, 14.f, 15.f, 8.f, 9.f, 10.f, 11.f, 4.f, 5.f, 6.f, 7.f, 0.f, 1.f, 2.f, 3.f };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     ASSERT_EQ(output_ptr.size(), answers.size());
     for (size_t i = 0; i < answers.size(); ++i)
@@ -1251,11 +1251,11 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x2_full_negative_stride) {
     // Stride (BFYX): -1x1x1x1
     // Output (BFYX): 2x2x2x2
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 2, 2, 2, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i64, format::bfyx, { 4, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f,
@@ -1272,7 +1272,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x2_full_negative_stride) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -1292,7 +1292,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x2_full_negative_stride) {
     std::vector<float> answers = {
             12.f, 13.f, 14.f, 15.f, 8.f, 9.f, 10.f, 11.f, 4.f, 5.f, 6.f, 7.f, 0.f, 1.f, 2.f, 3.f };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     ASSERT_EQ(output_ptr.size(), answers.size());
     for (size_t i = 0; i < answers.size(); ++i)
@@ -1305,11 +1305,11 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x1x1_2_negative_all) {
     // Input (BFZYX): 2x2x2x1x1
     // Output (BFZYX): 2x1x1x1x1
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfzyx, { 2, 2, 1, 1, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfzyx, { 2, 2, 1, 1, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i32, format::bfyx, { 3, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f
@@ -1325,7 +1325,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x1x1_2_negative_all) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -1346,7 +1346,7 @@ TEST(strided_slice_gpu_f32_i32, test_2x2x2x1x1_2_negative_all) {
             0.0f, 4.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (size_t i = 0; i < answers.size(); ++i)
     {
@@ -1358,11 +1358,11 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x1x1_2_negative_all) {
     // Input (BFZYX): 2x2x2x1x1
     // Output (BFZYX): 2x1x1x1x1
 
-    const auto& engine = get_test_engine();
-    auto input = memory::allocate(engine, { data_types::f32, format::bfzyx, { 2, 2, 1, 1, 2 } });
-    auto begin = memory::allocate(engine, { data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
-    auto end = memory::allocate(engine, { data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
-    auto strides = memory::allocate(engine, { data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
+    auto& engine = get_test_engine();
+    auto input = engine.allocate_memory({ data_types::f32, format::bfzyx, { 2, 2, 1, 1, 2 } });
+    auto begin = engine.allocate_memory({ data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
+    auto end = engine.allocate_memory({ data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
+    auto strides = engine.allocate_memory({ data_types::i64, format::bfyx, { 3, 1, 1, 1 } });
 
     set_values(input, {
             0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f
@@ -1378,7 +1378,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x1x1_2_negative_all) {
     });
 
     topology topology;
-    topology.add(input_layout("input", input.get_layout()));
+    topology.add(input_layout("input", input->get_layout()));
     topology.add(data("input2", begin));
     topology.add(data("input3", end));
     topology.add(data("input4", strides));
@@ -1399,7 +1399,7 @@ TEST(strided_slice_gpu_f32_i64, test_2x2x2x1x1_2_negative_all) {
             0.0f, 4.0f
     };
 
-    auto output_ptr = output.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output, get_test_stream());
 
     for (size_t i = 0; i < answers.size(); ++i)
     {

@@ -6,27 +6,20 @@
 
 #include "test_utils.h"
 #include "float16.h"
-#include "instrumentation.h"
 #include <iostream>
 
 using namespace cldnn;
 
 namespace tests {
-const std::string graph_dump_dir = DUMP_DIRECTORY;
 
 generic_test::generic_test()
     : generic_params(std::get<0>(GetParam()))
     , layer_params(std::get<1>(GetParam()))
     , max_ulps_diff_allowed(4)
-    , random_values(true)
-    , dump_graphs(false)
-    , dump_memory(false) { }
+    , random_values(true) { }
 
 void generic_test::run_single_test() {
     assert((generic_params->data_type == data_types::f32) || (generic_params->data_type == data_types::f16));
-    if (dump_graphs) {
-        generic_params->network_build_options.set_option(cldnn::build_option::graph_dumps_dir(DUMP_DIRECTORY));
-    }
     topology topology;
     topology.add_primitive(layer_params);
 
@@ -35,7 +28,7 @@ void generic_test::run_single_test() {
 
     size_t multipler = 0;
     for (size_t i = 0 ; i < generic_params->input_layouts.size() ; i++) {
-        input_mems.push_back( engine.allocate(generic_params->input_layouts[i]) );
+        input_mems.push_back( engine.allocate_memory(generic_params->input_layouts[i]) );
 
         if (random_values) {
             if (generic_params->data_type == data_types::f32) {
@@ -71,7 +64,7 @@ void generic_test::run_single_test() {
         // First input is provided to the network as input_layout.
         // Other inputs are provided as input_layout if optimize data flag is off. Otherwise they are provided as data.
         if ((i == 0) || !generic_params->network_build_options.get<cldnn::build_option_type::optimize_data>()->enabled()) {
-            topology.add(input_layout(input_name, input_mems[i].get_layout()));
+            topology.add(input_layout(input_name, input_mems[i]->get_layout()));
             input_layouts_names.push_back(input_name);
         } else {
             topology.add(data(input_name, input_mems[i]));
@@ -85,12 +78,12 @@ void generic_test::run_single_test() {
 
     if (generic_params->network_build_options.get<cldnn::build_option_type::optimize_data>()->enabled()) {
         // Add reorder after the first input in case of optimize data flag since it might change the input layout.
-        topology.add(reorder("input0", "input0_init", input_mems[0].get_layout()));
+        topology.add(reorder("input0", "input0_init", input_mems[0]->get_layout()));
     }
 
     if (layer_params->input[0] == "reorder0") {
         // Add reorder layer with output padding as input to the tested layer.
-        topology.add(reorder("reorder0", "input0", input_mems[0].get_layout().with_padding(padding{ { 0, 0, 1, 3 },{ 0, 0, 5, 2 } })));
+        topology.add(reorder("reorder0", "input0", input_mems[0]->get_layout().with_padding(padding{ { 0, 0, 1, 3 },{ 0, 0, 5, 2 } })));
     }
 
     prepare_input_for_test(input_mems);
@@ -108,18 +101,7 @@ void generic_test::run_single_test() {
 
     auto output_ref = generate_reference(input_mems);
 
-
-    if (dump_memory) {
-        std::string prefix = test_info.name();
-        for (size_t i = 0; i < generic_params->input_layouts.size(); i++) {
-            ::instrumentation::logger::log_memory_to_file(input_mems[i], prefix + "input" + std::to_string(i));
-        }
-        for (size_t i = 0; i < outputs.size(); i++) {
-            ::instrumentation::logger::log_memory_to_file(output, prefix + "output" + std::to_string(i));
-        }
-    }
-
-    if (output.get_layout().data_type == data_types::f32) {
+    if (output->get_layout().data_type == data_types::f32) {
         compare_buffers<float>(output, output_ref);
     } else {
         compare_buffers<FLOAT16>(output, output_ref);
@@ -127,9 +109,9 @@ void generic_test::run_single_test() {
 }
 
 template<typename Type>
-void generic_test::compare_buffers(const memory& out, const memory& ref) {
-    auto out_layout = out.get_layout();
-    auto ref_layout = ref.get_layout();
+void generic_test::compare_buffers(const memory::ptr out, const memory::ptr ref) {
+    auto out_layout = out->get_layout();
+    auto ref_layout = ref->get_layout();
 
     EXPECT_EQ(out_layout.size, ref_layout.size);
     EXPECT_EQ(out_layout.data_type, ref_layout.data_type);
@@ -303,13 +285,17 @@ std::vector<std::shared_ptr<test_params>> generic_test::generate_generic_test_pa
     return all_generic_params;
 }
 
-const cldnn::engine& get_test_engine() {
-    static const cldnn::engine test_engine;
-    return test_engine;
+cldnn::engine& get_test_engine() {
+    static std::shared_ptr<cldnn::engine> test_engine = nullptr;
+    if (!test_engine)
+        test_engine = cldnn::engine::create(engine_types::ocl, runtime_types::ocl);
+    return *test_engine;
 }
 
 const cldnn::stream& get_test_stream() {
-    static std::unique_ptr<stream> test_stream(get_test_engine().create_stream());
+    static std::shared_ptr<cldnn::stream> test_stream = nullptr;
+    if (!test_stream)
+        test_stream = get_test_engine().create_stream();
     return *test_stream;
 }
 
@@ -353,7 +339,7 @@ std::vector<cldnn::data_types> generic_test::test_data_types() {
     std::vector<cldnn::data_types> result;
     result.push_back(cldnn::data_types::f32);
 
-    if (get_test_engine().get_info().supports_fp16) {
+    if (get_test_engine().get_device_info().supports_fp16) {
         result.push_back(cldnn::data_types::f16);
     }
     return result;
