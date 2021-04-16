@@ -98,6 +98,9 @@ struct mem_lock {
 
     size_t size() const { return _mem->size() / sizeof(T); }
 
+    mem_lock(const mem_lock& other) = delete;
+    mem_lock& operator=(const mem_lock& other) = delete;
+
 #if defined(_SECURE_SCL) && (_SECURE_SCL > 0)
     auto begin() & { return stdext::make_checked_array_iterator(_ptr, size()); }
     auto end() & { return stdext::make_checked_array_iterator(_ptr, size(), size()); }
@@ -112,7 +115,16 @@ struct mem_lock {
         return _ptr[idx];
     }
 
-    T* data() const { return _ptr; }
+    T* data() const & { return _ptr; }
+
+    /// Prevents to use memory as temporary object
+    void data() && {}
+    /// Prevents to use memory as temporary object
+    void begin() && {}
+    /// Prevents to use memory as temporary object
+    void end() && {}
+    /// Prevents to use memory as temporary object
+    void operator[](size_t idx) && {}
 
 private:
     memory::ptr _mem;

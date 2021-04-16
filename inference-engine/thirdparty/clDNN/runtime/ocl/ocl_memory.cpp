@@ -21,7 +21,7 @@ gpu_buffer::gpu_buffer(ocl_engine* engine,
 gpu_buffer::gpu_buffer(ocl_engine* engine,
                        const layout& new_layout,
                        const cl::Buffer& buffer)
-    : memory(engine, new_layout, allocation_type::cl_mem, true)
+    : lockable_gpu_mem(), memory(engine, new_layout, allocation_type::cl_mem, true)
     , _buffer(buffer) {}
 
 void* gpu_buffer::lock(const stream& stream) {

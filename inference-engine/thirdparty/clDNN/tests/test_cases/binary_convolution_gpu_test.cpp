@@ -109,7 +109,7 @@ void compute_ref_conv_bin(const cldnn::memory::ptr src,
         return (data_t_src)((val >> bit) & 0x1);
     };
 
-    auto ker = [=](data_t_acc &d, int g, int mb, int oc,int oh, int ow, int& ks) {
+    auto ker = [&](data_t_acc &d, int g, int mb, int oc,int oh, int ow, int& ks) {
         for (int ic = 0; ic < IC / NG; ++ic) {
             for (int kh = 0; kh < KH; ++kh)
                 for (int kw = 0; kw < KW; ++kw) {

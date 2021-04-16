@@ -195,10 +195,10 @@ memory::ptr primitive_inst::allocate_output() {
 
     if (reset) {
         res->fill(stream);
+        // TODO: Check if we really need finish here. Looks like we can wait for completion before in network::execute()
+        stream.finish();
     }
 
-    // TODO: Check if we really need finish here. Looks like we can wait for completion before in network::execute()
-    stream.finish();
 
     return res;
 }

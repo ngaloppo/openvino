@@ -1277,7 +1277,6 @@ TEST(convolution_f32_fw_gpu, basic_convolution3D_group2) {
 }
 
 TEST(convolution_f32_fw_gpu, with_output_size_same_input) {
-
     auto& engine = get_test_engine();
 
     auto input = engine.allocate_memory({ data_types::f32, format::bfyx, { 1, 4, 320, 320 } });
