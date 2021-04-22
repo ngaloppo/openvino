@@ -1,0 +1,83 @@
+---
+############################################
+# global config
+############################################
+blob_dir: ./../PreCompiled_Graph_Binaries/
+
+############################################
+# per test config
+############################################
+
+# copy tests
+copy_device_to_device_experimental:
+  size_in_bytes: 1024
+
+copy_host_to_device_experimental:
+  size_in_bytes: 1024
+
+copy_host_to_host_experimental:
+  size_in_bytes: 1024
+
+# inference performance tests
+inference_throughput_experimental:
+  sync: 0 # 0: FENCE, 1: EVENT
+  blob: mobilenetv2.blob
+  pipeline_depth: 8
+  iteration_count: 1000
+
+inference_latency_experimental:
+  sync: 0 # 0: FENCE, 1: EVENT
+  blob: mobilenetv2.blob
+  iteration_count: 1000
+
+# inference dump outputs tests
+inference_dump_outputs_experimental:
+  input: cat3_224.bmp # supports .bin and .bmp files
+  blob: mobilenetv2.blob
+  pipeline_depth: 1
+  iteration_count: 1
+
+# inference bitmatch outputs tests
+# For multiple inputs or outputs, name of the input or output file
+# should match the name defined in the blob
+# Absolute or relative addresses also supported for input/output files
+inference_bitmatch_outputs_experimental:
+  input: [ mobilenetv2.in ]
+  blob: mobilenetv2.blob
+  output: [ mobilenetv2.out ]
+
+# image classification tests
+image_classification_experimental:
+  sync: 0 # 0: FENCE, 1: EVENT
+  image: cat3_224.bmp # supports .bin and .bmp files
+  blob: mobilenetv2.blob
+  class_index: 283
+
+# blob throughput tests
+blob_throughput_experimental:
+  blob: mobilenetv2.blob
+  pipeline_depth: 16
+  iteration_count: 1000
+
+# copy bandwidth tests
+copy_bandwidth_experimental:
+  type: 0 # 0: HOST_TO_DEVICE (READ), 1: DEVICE_TO_HOST (WRITE)
+  pipeline_depth: 16
+  size_in_bytes: 1048576
+  iteration_count: 100
+
+# multi inference tests
+# Each stream has the following format
+#     [ [ <blob_0>.blob, <blob_1>.blob, ... ], target_fps, iteration_count ]
+# The blobs within a stream are run in serial whereas the streams are run in parallel
+# Set target_fps to 0 to run the blob stream without limiting the fps.
+multi_inference_experimental:
+  blob_stream_list:  [ [ [ mobilenetv2.blob ], 0, 100 ], [ [ mobilenetv2.blob ], 60, 100 ], [ [ resnet50.blob ], 30, 50 ] ]
+
+# multi copy tests
+# Each stream has the following format
+#     [ copy_type, size_in_bytes ]
+# copy_type: 0: HOST_TO_DEVICE, 1: DEVICE_TO_HOST
+# Following example executes a HOST_TO_DEVICE copy of 1 MB and DEVICE_TO_HOST copy of 4 KB in parallel
+multi_copy_experimental:
+  copy_stream_list:  [ [ 0, 1048576 ], [ 1, 4096 ] ]
