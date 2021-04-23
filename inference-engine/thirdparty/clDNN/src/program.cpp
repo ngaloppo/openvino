@@ -552,6 +552,9 @@ void program_impl::mark_if_data_flow(program_node& node) {
 
 void program_impl::transfer_memory_to_device() {
     OV_ITT_SCOPED_TASK(itt::domains::CLDNN, "ProgramImpl::TransferMemory");
+    if (!get_engine().supports_allocation(allocation_type::usm_device))
+        return;
+
     for (auto& node : processing_order) {
         if (node->is_type<data>() && !node->need_lockable_memory()) {
             auto& data_node = node->as<data>();
@@ -565,10 +568,10 @@ void program_impl::transfer_memory_to_device() {
                 throw std::invalid_argument(err_str);
             }
 
+
             if (alloc_type == allocation_type::usm_host || alloc_type == allocation_type::usm_shared) {
                 // Allocate and transfer memory
-                auto device_mem = mem.get_engine()->allocate_memory(data_node_layout,
-                                                                    allocation_type::usm_device);
+                auto device_mem = mem.get_engine()->allocate_memory(data_node_layout, allocation_type::usm_device);
                 device_mem->copy_from_other(get_stream(), mem);
                 data_node.attach_memory(device_mem);
                 // TODO: Do we need finish call here? Maybe call it in network::execute() ?

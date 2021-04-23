@@ -746,6 +746,9 @@ void network_impl::transfer_memory_to_device(std::shared_ptr<primitive_inst> ins
     if (node.need_lockable_memory())
         return;
 
+    if (!get_engine().supports_allocation(allocation_type::usm_device))
+        return;
+
     if (alloc_type == allocation_type::usm_host || alloc_type == allocation_type::usm_shared) {
         // Allocate and transfer memory
         auto& mem_pool = inst_mem.get_engine()->get_memory_pool();

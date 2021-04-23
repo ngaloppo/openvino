@@ -33,6 +33,7 @@ memory::memory(engine* engine, const layout& layout,  allocation_type type, bool
 
 memory::~memory() {
     if (!_reused && _engine) {
+        // TODO: Make memory usage tracker static in memory class
         _engine->get_memory_pool().subtract_memory_used(_bytes_count);
     }
 }

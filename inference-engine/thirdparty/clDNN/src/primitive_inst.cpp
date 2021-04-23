@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
 #include "primitive_inst.h"
 #include "data_inst.h"
 #include "mutable_data_inst.h"
 #include "generic_layer_inst.h"
 #include "input_layout_inst.h"
-#include "max_unpooling_inst.h"
 #include "arg_max_min_inst.h"
 #include "fused_conv_eltwise_inst.h"
 
@@ -160,7 +158,7 @@ memory::ptr primitive_inst::allocate_output() {
     auto use_lockable_memory = _node.is_output() || _node.get_selected_impl()->is_cpu()
                                || std::any_of(_node.get_users().begin(), _node.get_users().end(),
                                               [](const program_node* n) {return n->get_selected_impl()->is_cpu() || n->can_be_optimized(); })
-                               || engine.supports_allocation(allocation_type::usm_device) == false;
+                               || !engine.supports_allocation(allocation_type::usm_device);
     allocation_type alloc_type = use_lockable_memory ?
                                  engine.get_lockable_preffered_memory_allocation_type(layout.format.is_image_2d())
                                                      : allocation_type::usm_device;

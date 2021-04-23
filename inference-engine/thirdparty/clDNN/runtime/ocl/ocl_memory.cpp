@@ -271,9 +271,10 @@ event::ptr gpu_usm::fill(stream& stream, unsigned char pattern) {
     // cl_stream.queue().enqueueFillUsm<unsigned char>(_buffer, pattern, _bytes_count, nullptr, &ev_ocl)
     // Workarounded with enqeue_memcopy. ToDo: Remove below code. Uncomment above.
     std::vector<unsigned char> temp_buffer(_bytes_count, pattern);
-    cl::usm::enqueue_memcpy(cl_stream.queue(), _buffer.get(), temp_buffer.data(), _bytes_count, false, nullptr, &ev_ocl);
+    // TODO: Do we really need blocking call here? Non-blocking one causes accuracy issues right now, but hopefully it can be fixed in more performant way.
+    const bool blocking = true;
+    cl::usm::enqueue_memcpy(cl_stream.queue(), _buffer.get(), temp_buffer.data(), _bytes_count, blocking, nullptr, &ev_ocl);
 
-    //  dynamic_cast<base_event*>(ev.get())->set();
     return ev;
 }
 
