@@ -252,10 +252,10 @@ CLDNNExecutionContextImpl::CLDNNExecutionContextImpl(const std::shared_ptr<IInfe
         bool enable_profiling = (m_config.useProfiling ||
                 (m_config.tuningConfig.mode == cldnn::tuning_mode::tuning_tune_and_cache) ||
                 (m_config.tuningConfig.mode == cldnn::tuning_mode::tuning_retune_and_cache));
-        bool use_out_of_order_queue = true;
+        cldnn::queue_types queue_type = cldnn::queue_types::out_of_order;
         bool use_unified_shared_memory = true;
         m_engine = cldnn::engine::create(engine_type, runtime_type, dev, cldnn::engine_configuration(enable_profiling,
-                                                                                                     use_out_of_order_queue,
+                                                                                                     queue_type,
                                                                                                      m_config.sources_dumps_dir,
                                                                                                      m_config.queuePriority,
                                                                                                      m_config.queueThrottle,

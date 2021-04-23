@@ -13,7 +13,7 @@ using namespace ::tests;
 
 TEST(DISABLED_oooq_test, simple)
 {
-    engine_configuration cfg{ false, true };
+    engine_configuration cfg{ false, queue_types::out_of_order };
     auto eng = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
 
     auto input_mem = eng->allocate_memory(layout{ data_types::f32, format::bfyx, { 1, 1, 1, 1 } });

@@ -780,21 +780,21 @@ struct caffe_resample_random_test_params {
 struct caffe_resample_random_test : testing::TestWithParam<caffe_resample_random_test_params>
 {
     template <typename T>
-    void fill_random_typed(memory& mem, int min, int max, int k) {
-        auto size = mem.get_layout().size;
+    void fill_random_typed(memory::ptr mem, int min, int max, int k) {
+        auto size = mem->get_layout().size;
         size_t b = size.batch[0];
         size_t f = size.feature[0];
         size_t x = size.spatial[0];
         size_t y = size.spatial[1];
 
         auto data = generate_random_4d<T>(b, f, y, x, min, max, k);
-        auto ptr = mem.pointer<T>();
+        cldnn::mem_lock<T> ptr(mem, get_test_stream());
         for (size_t bi = 0; bi < b; ++bi) {
             for (size_t fi = 0; fi < f; ++fi) {
                 for (size_t yi = 0; yi < y; ++yi) {
                     for (size_t xi = 0; xi < x; ++xi) {
                         auto coords = tensor(batch(bi), feature(fi), spatial(xi, yi, 0, 0));
-                        auto offset = mem.get_layout().get_linear_offset(coords);
+                        auto offset = mem->get_layout().get_linear_offset(coords);
                         ptr[offset] = data[bi][fi][yi][xi];
                     }
                 }
@@ -802,8 +802,8 @@ struct caffe_resample_random_test : testing::TestWithParam<caffe_resample_random
         }
     }
 
-    void fill_random(memory& mem) {
-        auto dt = mem.get_layout().data_type;
+    void fill_random(memory::ptr mem) {
+        auto dt = mem->get_layout().data_type;
         switch (dt) {
         case data_types::f32:
             fill_random_typed<float>(mem, -127, 127, 2);
@@ -823,16 +823,16 @@ struct caffe_resample_random_test : testing::TestWithParam<caffe_resample_random
     }
 
     template <typename T>
-    bool compare_outputs(const memory& out_ref, const memory& out_opt) {
-        auto output_lay = out_ref.get_layout();
-        auto opt_output_lay = out_opt.get_layout();
+    bool compare_outputs(const memory::ptr out_ref, const memory::ptr out_opt) {
+        auto output_lay = out_ref->get_layout();
+        auto opt_output_lay = out_opt->get_layout();
 
         size_t b = output_lay.size.batch[0];
         size_t f = output_lay.size.feature[0];
         size_t x = output_lay.size.spatial[0];
         size_t y = output_lay.size.spatial[1];
-        auto ref_ptr = out_ref.pointer<T>();
-        auto opt_ptr = out_opt.pointer<T>();
+        cldnn::mem_lock<T> ref_ptr(out_ref, get_test_stream());
+        cldnn::mem_lock<T> opt_ptr(out_opt, get_test_stream());
         for (size_t bi = 0; bi < b; ++bi) {
             for (size_t fi = 0; fi < f; ++fi) {
                 for (size_t yi = 0; yi < y; ++yi) {
@@ -856,10 +856,10 @@ struct caffe_resample_random_test : testing::TestWithParam<caffe_resample_random
     }
 
     void execute_compare(const caffe_resample_random_test_params& params, bool check_result) {
-        auto eng = cldnn::engine();
+        auto& engine = get_test_engine();
 
         auto in_layout = layout(params.input_type, params.in_format, params.input_size);
-        auto in_mem = memory::allocate(eng, in_layout);
+        auto in_mem = engine.allocate_memory(in_layout);
         fill_random(in_mem);
 
         cldnn::topology topo;
@@ -874,15 +874,13 @@ struct caffe_resample_random_test : testing::TestWithParam<caffe_resample_random
         build_opts.set_option(build_option::outputs({"resample"}));
         build_opts.set_option(build_option::force_implementations({ {"resample", {params.in_format, "resample_ref"}} }));
 
-        auto net = network(eng, topo, build_opts);
+        auto net = network(engine, topo, build_opts);
         net.set_input_data("in", in_mem);
 
         auto result = net.execute();
         auto output = result.at("resample").get_memory();
 
         // Execute resample_opt
-        auto eng_opt = cldnn::engine();
-
         cldnn::topology topo_opt;
         topo_opt.add(input_layout("in", in_layout));
         auto prim_opt = resample("resample_opt", "in", params.output_size, params.num_filter, params.operation_type);
@@ -895,7 +893,7 @@ struct caffe_resample_random_test : testing::TestWithParam<caffe_resample_random
         build_opts_opt.set_option(build_option::outputs({"resample_opt"}));
         build_opts.set_option(build_option::force_implementations({ {"resample_opt", {params.in_format, "resample_opt"}} }));
 
-        auto net_opt = network(eng_opt, topo_opt, build_opts_opt);
+        auto net_opt = network(engine, topo_opt, build_opts_opt);
 
         // Use in_mem from ref network
         net_opt.set_input_data("in", in_mem);

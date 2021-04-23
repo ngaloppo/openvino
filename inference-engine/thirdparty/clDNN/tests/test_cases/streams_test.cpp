@@ -11,7 +11,7 @@ using namespace cldnn;
 using namespace ::tests;
 
 static engine_configuration streams_config(false,
-                                           true,
+                                           queue_types::out_of_order,
                                            "",
                                            priority_mode_types::disabled,
                                            throttle_mode_types::disabled,

@@ -125,10 +125,7 @@ TEST(memory_pool, multi_outputs_network) {
     //            -- relu2 --  relu3 -- relu5--relu6--relu7
     // neither of relu5, relu6 nor relu7 can share resource with relu4.
 
-    // uncomment this line to disable memory pool
-    /*engine_configuration cfg{ false, false, false, std::string(), std::string(), true, std::string(),std::string(), 0, false };
-    engine engine{ cfg };*/
-    auto& engine = get_test_engine();// here we need new engine
+    auto& engine = get_test_engine();
     auto batch_num = 1;
     auto feature_num = 4;
     auto x_size = 4;
@@ -163,7 +160,7 @@ TEST(memory_pool, oooq) {
                 -- relu3 --  relu5 ---------
        neither of relu5, relu6 nor relu7 can share resource with relu4. */
 
-    engine_configuration cfg{ false, true, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
+    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
     auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
     auto batch_num = 1;
     auto feature_num = 4;
@@ -199,7 +196,7 @@ TEST(memory_pool, DISABLED_shared_mem_pool_same_topology_twice) {
                       -- relu3 --  relu5 ---------
     neither of relu5, relu6 nor relu7 can share resource with relu4. */
 
-    engine_configuration cfg{ false, true, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
+    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
     auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
     auto batch_num = 1;
     auto feature_num = 4;
@@ -274,7 +271,7 @@ TEST(memory_pool, DISABLED_shared_mem_pool_same_topology_twice) {
 }
 
 TEST(memory_pool, DISABLED_shared_mem_pool_same_topology_twice_weights) {
-    engine_configuration cfg{ false, true, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
+    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
     auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
     auto batch_num = 1;
     auto feature_num = 3;
@@ -353,7 +350,7 @@ TEST(memory_pool, DISABLED_shared_mem_pool_same_topology_twice_weights) {
 }
 
 TEST(memory_pool, shared_mem_pool_diff_batches) {
-    engine_configuration cfg{ false, true, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
+    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
     auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
     auto batch_8 = 8;
     auto batch_1 = 1;
@@ -400,7 +397,7 @@ TEST(memory_pool, shared_mem_pool_diff_batches) {
 }
 
 TEST(memory_pool, shared_dep_two_output) {
-    engine_configuration cfg{ false, true, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
+    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
     auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
 
     auto batch_1 = 1;
@@ -444,7 +441,7 @@ TEST(memory_pool, shared_dep_two_output) {
 }
 
 TEST(memory_pool, non_opt_intermidate_opt_after) {
-    engine_configuration cfg{ false, true, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
+    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
     auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
 
     auto input_layout1 = layout(cldnn::data_types::f32, cldnn::format::bfyx, { 1, 1, 2, 2 });
@@ -496,7 +493,7 @@ TEST(memory_pool, non_opt_intermidate_opt_after) {
 }
 
 TEST(memory_pool, add_mem_dep_test) {
-    engine_configuration cfg{ false, true, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
+    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
     auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
 
     auto input_layout1 = layout(cldnn::data_types::f32, cldnn::format::bfyx, { 1, 2, 2, 2 });

@@ -17,6 +17,7 @@
 #include <cldnn/primitives/deconvolution.hpp>
 #include <cldnn/primitives/permute.hpp>
 #include <cldnn/primitives/gather.hpp>
+#include <cldnn/primitives/gather_nd.hpp>
 #include <cldnn/primitives/scatter_update.hpp>
 #include <cldnn/primitives/scatter_nd_update.hpp>
 #include <cldnn/primitives/scatter_elements_update.hpp>

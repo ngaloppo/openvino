@@ -3553,18 +3553,18 @@ TEST_P(eltwise_test_mixed_layout, mixed_layout) {
     VF<float> input1_rnd_vec = flatten_6d<float>(format::bfwzyx, input1_rnd);
     VF<float> input2_rnd_vec = flatten_6d<float>(format::bfwzyx, input2_rnd);
 
-    const auto& engine = get_test_engine();
+    auto& engine = get_test_engine();
     auto in0_size = tensor(format::bfyx, input0_size);
     auto in1_size = tensor(format::bfyx, input1_size);
 
-    auto input1 = memory::allocate(engine, { data_types::f32, format::bfyx, in0_size });
-    auto input2 = memory::allocate(engine, { data_types::f32, format::bfyx, in1_size });
+    auto input1 = engine.allocate_memory({ data_types::f32, format::bfyx, in0_size });
+    auto input2 = engine.allocate_memory({ data_types::f32, format::bfyx, in1_size });
     set_values(input1, input1_rnd_vec);
     set_values(input2, input2_rnd_vec);
 
     topology topology;
-    topology.add(input_layout("input1", input1.get_layout()));
-    topology.add(input_layout("input2", input2.get_layout()));
+    topology.add(input_layout("input1", input1->get_layout()));
+    topology.add(input_layout("input2", input2->get_layout()));
     topology.add(reorder("reorder1", "input1", format0, data_types::f32));
     topology.add(reorder("reorder2", "input2", format1, data_types::f32));
     topology.add(eltwise("eltwise", {"reorder1", "reorder2"}, mode));
@@ -3582,7 +3582,7 @@ TEST_P(eltwise_test_mixed_layout, mixed_layout) {
     EXPECT_TRUE(network.get_primitive_info("eltwise").find(selected_kernel) != std::string::npos);
 
     auto output_memory = outputs.at(out_id).get_memory();
-    auto output_ptr = output_memory.pointer<float>();
+    cldnn::mem_lock<float> output_ptr(output_memory, get_test_stream());
 
     VF<float> output_cpu_vec = eltwise_ref(input1_rnd, input2_rnd, in0_size, in1_size, mode);
     for (size_t i = 0; i < output_cpu_vec.size(); ++i) {

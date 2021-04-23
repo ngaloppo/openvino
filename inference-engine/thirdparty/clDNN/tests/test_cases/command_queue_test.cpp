@@ -68,7 +68,7 @@ TEST(command_queue_test, test_priority_hints) {
     engine_configuration configuration =
         engine_configuration(
             false,          // profiling
-            true,           // primitives_parallelisation
+            queue_types::out_of_order,
             "",             // sources_dumps_dir
             priority_mode_types::low,
             throttle_mode_types::disabled);
@@ -80,7 +80,7 @@ TEST(command_queue_test, test_throttle_hints) {
     engine_configuration configuration =
         engine_configuration(
             false,          // profiling
-            true,           // primitives_parallelisation
+            queue_types::out_of_order,
             "",             // sources_dumps_dir
             priority_mode_types::disabled,
             throttle_mode_types::high);
@@ -92,7 +92,7 @@ TEST(command_queue_test, test_priority_and_throttle_hints) {
     engine_configuration configuration =
         engine_configuration(
             false,          // profiling
-            true,           // primitives_parallelisation
+            queue_types::out_of_order,
             "",             // sources_dumps_dir
             priority_mode_types::high,
             throttle_mode_types::low);

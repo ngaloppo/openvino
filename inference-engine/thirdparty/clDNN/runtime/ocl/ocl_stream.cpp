@@ -258,7 +258,7 @@ ocl_stream::ocl_stream(const ocl_engine& engine) : _engine(engine) {
     auto config = engine.configuration();
     gpu::command_queues_builder queue_builder(context, device);
     queue_builder.set_profiling(config.enable_profiling);
-    queue_builder.set_out_of_order((config.use_out_of_order_queue));
+    queue_builder.set_out_of_order((config.queue_type == queue_types::out_of_order));
 
     bool priorty_extensions = engine.extension_supported("cl_khr_priority_hints") && engine.extension_supported("cl_khr_create_command_queue");
     queue_builder.set_priority_mode(config.priority_mode, priorty_extensions);
@@ -299,9 +299,12 @@ event::ptr ocl_stream::enqueue_kernel(kernel& kernel,
     auto local = toNDRange(args_desc.workGroups.local);
     std::vector<cl::Event> dep_events;
     auto dep_events_ptr = &dep_events;
-    if (!_engine.configuration().use_out_of_order_queue) {
+    if (_engine.configuration().queue_type == queue_types::in_order) {
+        // Seems like in-order queue doesn't work in some cases
+        // max_unpooling_gpu.basic_in2x3x2x2 fails with invalid events
+        // TODO: Find the root cause
         for (auto& dep : deps) {
-            if (auto ocl_base_ev = dynamic_cast<ocl_base_event*>(dep.get())) {
+            if (auto ocl_base_ev = std::dynamic_pointer_cast<ocl_base_event>(dep)) {
                 dep_events.push_back(ocl_base_ev->get());
             }
         }
@@ -313,7 +316,7 @@ event::ptr ocl_stream::enqueue_kernel(kernel& kernel,
 
     cl::Event ret_ev;
 
-    bool set_output_event = !_engine.configuration().use_out_of_order_queue || is_output_event || _engine.configuration().enable_profiling;
+    bool set_output_event = _engine.configuration().queue_type == queue_types::in_order || is_output_event || _engine.configuration().enable_profiling;
 
     try {
         _command_queue.enqueueNDRangeKernel(kern, cl::NullRange, global, local, dep_events_ptr, set_output_event ? &ret_ev : nullptr);
@@ -332,7 +335,7 @@ event::ptr ocl_stream::enqueue_marker(std::vector<event::ptr> const& deps, bool 
     if (deps.empty())
         return create_user_event(true);
 
-    if (!_engine.configuration().use_out_of_order_queue) {
+    if (_engine.configuration().queue_type == queue_types::in_order) {
         cl::Event ret_ev;
         std::vector<cl::Event> dep_events;
         for (auto& dep : deps) {

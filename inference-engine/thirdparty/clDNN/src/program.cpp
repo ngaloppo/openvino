@@ -569,11 +569,10 @@ void program_impl::transfer_memory_to_device() {
                 // Allocate and transfer memory
                 auto device_mem = mem.get_engine()->allocate_memory(data_node_layout,
                                                                     allocation_type::usm_device);
-                // device_mem->fill(get_stream());
                 device_mem->copy_from_other(get_stream(), mem);
                 data_node.attach_memory(device_mem);
+                // TODO: Do we need finish call here? Maybe call it in network::execute() ?
                 get_stream().finish();
-                // data_node.get_primitive()->mem->release();
             }
         }
     }
