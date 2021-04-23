@@ -753,8 +753,7 @@ void set_params(const program_node& node, kernel_selector::params& params) {
     params.engineInfo.computeUnitsCount = device_info.execution_units_count;
     params.engineInfo.maxThreadsPerExecutionUnit = device_info.max_threads_per_execution_unit;
     params.engineInfo.maxThreadsPerDevice = device_info.max_threads_per_device;
-    // FIXME: should be not null;
-    params.engineInfo.deviceCache = nullptr;
+    params.engineInfo.tuningCachePath = program.get_engine().configuration().tuning_cache_path;
     params.engineInfo.driverVersion = device_info.driver_version;
 
     auto impl_forcing_bo = program.get_options().get<build_option_type::force_implementations>();
