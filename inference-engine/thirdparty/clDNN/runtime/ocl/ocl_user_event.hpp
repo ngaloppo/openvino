@@ -16,7 +16,7 @@
 #endif
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 
 struct user_event : public base_event, public cldnn::user_event {
     explicit user_event(const cl::Context& ctx) : base_event(ctx, cl::UserEvent(ctx)), cldnn::user_event(false), _ctx(ctx) {}
@@ -44,5 +44,5 @@ protected:
 #pragma warning(pop)
 #endif
 
-}  // namespace gpu
+}  // namespace ocl
 }  // namespace cldnn

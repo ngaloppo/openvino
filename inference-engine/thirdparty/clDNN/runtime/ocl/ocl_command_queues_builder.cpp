@@ -7,13 +7,10 @@
 #include <string>
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 
-command_queues_builder::command_queues_builder(const cl::Context& context,
-                                               const cl::Device& device)
-    : _context(context),
-      _device(device),
-      _profiling(false),
+command_queues_builder::command_queues_builder()
+    : _profiling(false),
       _out_of_order(false),
       _priority_mode(priority_mode_types::disabled),
       _throttle_mode(throttle_mode_types::disabled) {}
@@ -24,12 +21,13 @@ cl_command_queue_properties command_queues_builder::get_properties() {
     return ret;
 }
 
-void command_queues_builder::build() {
+queue_type command_queues_builder::build(const cl::Context& context, const cl::Device& device) {
     auto properties = get_properties();
 
+    queue_type queue;
+
     if (_priority_mode == priority_mode_types::disabled && _throttle_mode == throttle_mode_types::disabled) {
-        _queue = queue_type(_context, _device, properties);
-        return;
+        queue = queue_type(context, device, properties);
     }
 
     unsigned cl_queue_priority_value = CL_QUEUE_PRIORITY_MED_KHR;
@@ -69,7 +67,7 @@ void command_queues_builder::build() {
                                                 properties,
                                                 0};
 
-        _queue = queue_type(clCreateCommandQueueWithProperties(_context.get(), _device.get(), properties_low, &error_code));
+        queue = queue_type(clCreateCommandQueueWithProperties(context.get(), device.get(), properties_low, &error_code));
     } else if (_priority_mode != priority_mode_types::disabled) {
         cl_queue_properties properties_low[] = {CL_QUEUE_PRIORITY_KHR,
                                                 cl_queue_priority_value,
@@ -77,7 +75,7 @@ void command_queues_builder::build() {
                                                 properties,
                                                 0};
 
-        _queue = queue_type(clCreateCommandQueueWithProperties(_context.get(), _device.get(), properties_low, &error_code));
+        queue = queue_type(clCreateCommandQueueWithProperties(context.get(), device.get(), properties_low, &error_code));
     } else if (_throttle_mode != throttle_mode_types::disabled) {
         cl_queue_properties properties_low[] = {CL_QUEUE_THROTTLE_KHR,
                                                 cl_queue_throttle_value,
@@ -85,13 +83,15 @@ void command_queues_builder::build() {
                                                 properties,
                                                 0};
 
-        _queue = queue_type(clCreateCommandQueueWithProperties(_context.get(), _device.get(), properties_low, &error_code));
+        queue = queue_type(clCreateCommandQueueWithProperties(context.get(), device.get(), properties_low, &error_code));
     }
 
     if (error_code != CL_SUCCESS) {
         CLDNN_ERROR_MESSAGE("Command queues builders",
                             "clCreateCommandQueueWithPropertiesINTEL error " + std::to_string(error_code));
     }
+
+    return queue;
 }
 
 void command_queues_builder::set_priority_mode(priority_mode_types priority, bool extension_support) {
@@ -112,5 +112,5 @@ void command_queues_builder::set_throttle_mode(throttle_mode_types throttle, boo
     }
     _throttle_mode = throttle;
 }
-}  // namespace gpu
+}  // namespace ocl
 }  // namespace cldnn

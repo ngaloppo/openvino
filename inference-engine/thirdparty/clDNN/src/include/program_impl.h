@@ -143,7 +143,7 @@ public:
                  bool is_internal);
     ~program_impl();
     engine& get_engine() const { return _engine; }
-    gpu::ocl_engine& get_build_engine() const { return program_state._kernels_cache.get_build_engine(); }
+    ocl::ocl_engine& get_build_engine() const { return program_state._kernels_cache.get_build_engine(); }
     const build_options& get_options() const { return options; }
     std::list<program_node*>& get_inputs() {
         return inputs;
@@ -232,8 +232,8 @@ public:
                              bool is_internal);
     static void init_primitives();
     void compile();
-    gpu::kernel_id add_kernel(const std::shared_ptr<kernel_selector::kernel_string> kernel_sring);
-    kernel::ptr get_kernel(gpu::kernel_id id);
+    kernel_id add_kernel(const std::shared_ptr<kernel_selector::kernel_string> kernel_sring);
+    kernel::ptr get_kernel(kernel_id id);
 
 private:
     uint32_t prog_id = 0;

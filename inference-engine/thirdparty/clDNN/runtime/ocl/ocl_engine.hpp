@@ -16,7 +16,7 @@
 #include <string>
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 
 struct ocl_engine : public engine {
 public:
@@ -46,5 +46,5 @@ private:
     std::unique_ptr<stream> _program_stream;
 };
 
-}  // namespace gpu
+}  // namespace ocl
 }  // namespace cldnn

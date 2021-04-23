@@ -147,7 +147,7 @@ public:
 private:
     static std::mutex _mutex;
     engine& _engine;
-    std::unique_ptr<ocl_engine> _build_engine;
+    std::unique_ptr<ocl::ocl_engine> _build_engine;
     kernels_code _kernels_code;
     std::atomic<bool> _pending_compilation{false};
     std::map<const std::string, kernel::ptr> _kernels;
@@ -169,7 +169,7 @@ public:
     kernel_id set_kernel_source(const std::shared_ptr<kernel_selector::kernel_string>& kernel_string,
                                 bool dump_custom_program);
     kernel::ptr get_kernel(kernel_id id) const;
-    ocl_engine& get_build_engine() const { return *_build_engine; }
+    ocl::ocl_engine& get_build_engine() const { return *_build_engine; }
     // forces compilation of all pending kernels/programs
     void build_all();
     void reset();

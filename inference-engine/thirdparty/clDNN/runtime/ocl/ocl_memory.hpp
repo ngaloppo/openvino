@@ -15,7 +15,7 @@
 #include <memory>
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 struct lockable_gpu_mem {
     lockable_gpu_mem() :
         _lock_count(0),
@@ -105,5 +105,5 @@ struct gpu_usm : public lockable_gpu_mem, public memory {
 protected:
     cl::UsmMemory _buffer;
 };
-}  // namespace gpu
+}  // namespace ocl
 }  // namespace cldnn

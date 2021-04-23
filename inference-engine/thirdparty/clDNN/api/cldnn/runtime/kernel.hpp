@@ -12,6 +12,8 @@
 
 namespace cldnn {
 
+using kernel_id = std::string;
+
 class kernel {
 public:
     using ptr = std::shared_ptr<kernel>;

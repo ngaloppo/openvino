@@ -46,8 +46,8 @@ struct usm_test_params{
 
 class BaseUSMTest : public ::testing::TestWithParam<usm_test_params> {
 protected:
-    std::shared_ptr<gpu::ocl_device> _device = nullptr;
-    std::shared_ptr<gpu::ocl_engine> _engine = nullptr;
+    std::shared_ptr<ocl::ocl_device> _device = nullptr;
+    std::shared_ptr<ocl::ocl_engine> _engine = nullptr;
     bool _supports_usm = false;
 public:
     void SetUp() override {
@@ -56,14 +56,14 @@ public:
         auto devices = query.get_available_devices();
         for (const auto& d : devices) {
             if (d.second->get_mem_caps().supports_usm()) {
-                _device = std::dynamic_pointer_cast<gpu::ocl_device>(d.second);
+                _device = std::dynamic_pointer_cast<ocl::ocl_device>(d.second);
                 break;
             }
         }
         if (!_device) {
             GTEST_SUCCEED();
         }
-        _engine = std::dynamic_pointer_cast<gpu::ocl_engine>(engine::create(engine_types::ocl, runtime_types::ocl, _device));
+        _engine = std::dynamic_pointer_cast<ocl::ocl_engine>(engine::create(engine_types::ocl, runtime_types::ocl, _device));
         _supports_usm = true;
     }
 
@@ -117,7 +117,7 @@ TEST_P(copy_and_read_buffer, basic) {
         return;
     }
     try {
-        gpu::ocl_stream stream(*_engine);
+        ocl::ocl_stream stream(*_engine);
 
         size_t values_count = 100;
         size_t values_bytes_count = values_count * sizeof(float);
@@ -135,7 +135,7 @@ TEST_P(copy_and_read_buffer, basic) {
             break;
         }
         case allocation_type::usm_device: {
-            auto casted = std::dynamic_pointer_cast<gpu::gpu_usm>(cldnn_mem_src);
+            auto casted = std::dynamic_pointer_cast<ocl::gpu_usm>(cldnn_mem_src);
             auto host_buf = _engine->allocate_memory(linear_layout, allocation_type::usm_host);
             {
                 cldnn::mem_lock<float> lock(host_buf, stream);
@@ -190,7 +190,7 @@ TEST_P(fill_buffer, DISABLED_basic) {
         return;
     }
     try {
-        gpu::ocl_stream stream(*_engine);
+        ocl::ocl_stream stream(*_engine);
         auto queue = stream.get_queue();
 
         size_t values_count = 100;

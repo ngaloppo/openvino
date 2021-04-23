@@ -14,7 +14,7 @@
 #include <algorithm>
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 
 struct ocl_device : public device {
 public:
@@ -38,5 +38,5 @@ private:
     memory_capabilities _mem_caps;
 };
 
-}  // namespace gpu
+}  // namespace ocl
 }  // namespace cldnn

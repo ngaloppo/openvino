@@ -30,7 +30,7 @@ cl::PFN_clCreateFromD3D11Buffer cl::BufferDX::pfn_clCreateFromD3D11Buffer = NULL
 #endif
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 
 ocl_error::ocl_error(cl::Error const& err)
     : std::runtime_error(err.what() + std::string(", error code: ") + std::to_string(err.err())) {}
@@ -70,13 +70,14 @@ memory::ptr ocl_engine::allocate_memory(const layout& layout, allocation_type ty
 
     _memory_pool->add_memory_used(layout.bytes_count());
 
+
     try {
         if (layout.format.is_image_2d()) {
-            return std::make_shared<gpu::gpu_image2d>(this, layout);
+            return std::make_shared<ocl::gpu_image2d>(this, layout);
         } else if (type == allocation_type::cl_mem) {
-            return std::make_shared<gpu::gpu_buffer>(this, layout);
+            return std::make_shared<ocl::gpu_buffer>(this, layout);
         } else {
-            return std::make_shared<gpu::gpu_usm>(this, layout, type);
+            return std::make_shared<ocl::gpu_usm>(this, layout, type);
         }
     } catch (const cl::Error& clErr) {
         switch (clErr.err()) {
@@ -103,21 +104,21 @@ memory::ptr ocl_engine::reinterpret_buffer(const memory& memory, const layout& n
 
     try {
         if (new_layout.format.is_image_2d()) {
-           return std::make_shared<gpu::gpu_image2d>(this,
+           return std::make_shared<ocl::gpu_image2d>(this,
                                      new_layout,
-                                     reinterpret_cast<const gpu::gpu_image2d&>(memory).get_buffer());
+                                     reinterpret_cast<const ocl::gpu_image2d&>(memory).get_buffer());
         } else if (memory_capabilities::is_usm_type(memory.get_allocation_type())) {
-            return std::make_shared<gpu::gpu_usm>(this,
+            return std::make_shared<ocl::gpu_usm>(this,
                                      new_layout,
-                                     reinterpret_cast<const gpu::gpu_usm&>(memory).get_buffer(),
+                                     reinterpret_cast<const ocl::gpu_usm&>(memory).get_buffer(),
                                      memory.get_allocation_type());
         } else {
-           return std::make_shared<gpu::gpu_buffer>(this,
+           return std::make_shared<ocl::gpu_buffer>(this,
                                     new_layout,
-                                    reinterpret_cast<const gpu::gpu_buffer&>(memory).get_buffer());
+                                    reinterpret_cast<const ocl::gpu_buffer&>(memory).get_buffer());
         }
     } catch (cl::Error const& err) {
-        throw gpu::ocl_error(err);
+        throw ocl::ocl_error(err);
     }
 }
 
@@ -125,16 +126,16 @@ memory::ptr ocl_engine::reinterpret_handle(const layout& new_layout, shared_mem_
    try {
         if (new_layout.format.is_image_2d() && params.mem_type == shared_mem_type::shared_mem_image) {
             cl::Image2D img(static_cast<cl_mem>(params.mem), true);
-            return std::make_shared<gpu::gpu_image2d>(this, new_layout, img);
+            return std::make_shared<ocl::gpu_image2d>(this, new_layout, img);
         } else if (new_layout.format.is_image_2d() && params.mem_type == shared_mem_type::shared_mem_vasurface) {
-            return std::make_shared<gpu::gpu_media_buffer>(this, new_layout, params);
+            return std::make_shared<ocl::gpu_media_buffer>(this, new_layout, params);
 #ifdef _WIN32
         } else if (params.mem_type == shared_mem_type::shared_mem_dxbuffer) {
-            return std::make_shared<gpu::gpu_dx_buffer>(this, new_layout, params);
+            return std::make_shared<ocl::gpu_dx_buffer>(this, new_layout, params);
 #endif
         } else if (params.mem_type == shared_mem_type::shared_mem_buffer) {
             cl::Buffer buf(static_cast<cl_mem>(params.mem), true);
-            return std::make_shared<gpu::gpu_buffer>(this, new_layout, buf);
+            return std::make_shared<ocl::gpu_buffer>(this, new_layout, buf);
         } else {
             throw std::runtime_error("unknown shared object fromat or type");
         }
@@ -161,11 +162,11 @@ bool ocl_engine::is_the_same_buffer(const memory& mem1, const memory& mem2) {
         return true;
 
     if (!memory_capabilities::is_usm_type(mem1.get_allocation_type()))
-        return (reinterpret_cast<const gpu::gpu_buffer&>(mem1).get_buffer() ==
-                reinterpret_cast<const gpu::gpu_buffer&>(mem2).get_buffer());
+        return (reinterpret_cast<const ocl::gpu_buffer&>(mem1).get_buffer() ==
+                reinterpret_cast<const ocl::gpu_buffer&>(mem2).get_buffer());
     else
-        return (reinterpret_cast<const gpu::gpu_usm&>(mem1).get_buffer() ==
-                reinterpret_cast<const gpu::gpu_usm&>(mem2).get_buffer());
+        return (reinterpret_cast<const ocl::gpu_usm&>(mem1).get_buffer() ==
+                reinterpret_cast<const ocl::gpu_usm&>(mem2).get_buffer());
 }
 
 void* ocl_engine::get_user_context() const {
@@ -185,9 +186,9 @@ stream& ocl_engine::get_program_stream() const {
     return *_program_stream;
 }
 
-}  // namespace gpu
+}  // namespace ocl
 
 std::shared_ptr<cldnn::engine> create_ocl_engine(const device::ptr device, runtime_types runtime_type, const engine_configuration& configuration) {
-    return std::make_shared<gpu::ocl_engine>(device, runtime_type, configuration);
+    return std::make_shared<ocl::ocl_engine>(device, runtime_type, configuration);
 }
 }  // namespace cldnn

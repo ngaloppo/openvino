@@ -130,11 +130,11 @@ void program_impl::compile() {
     cache.build_all();
 }
 
-gpu::kernel_id program_impl::add_kernel(const std::shared_ptr<kernel_selector::kernel_string> kernelSring) {
+kernel_id program_impl::add_kernel(const std::shared_ptr<kernel_selector::kernel_string> kernelSring) {
     return program_state._kernels_cache.set_kernel_source(kernelSring, false);
 }
 
-kernel::ptr program_impl::get_kernel(gpu::kernel_id id) {
+kernel::ptr program_impl::get_kernel(kernel_id id) {
     return program_state._kernels_cache.get_kernel(id);
 }
 

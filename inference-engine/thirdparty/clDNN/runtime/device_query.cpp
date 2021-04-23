@@ -41,7 +41,7 @@ device_query::device_query(engine_types engine_type, runtime_types runtime_type,
     else
 #endif
     {
-        gpu::ocl_device_detector ocl_detector;
+        ocl::ocl_device_detector ocl_detector;
         _available_devices = ocl_detector.get_available_devices(user_context, user_device);
     }
 }

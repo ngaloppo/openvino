@@ -18,7 +18,7 @@
 #include <vector>
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 
 class events_pool;
 
@@ -85,5 +85,5 @@ private:
     bool _output_event = false;
 };
 
-}  // namespace gpu
+}  // namespace ocl
 }  // namespace cldnn

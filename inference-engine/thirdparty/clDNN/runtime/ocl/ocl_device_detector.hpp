@@ -13,7 +13,7 @@
 #include <map>
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 
 class ocl_device_detector {
 public:
@@ -26,5 +26,5 @@ private:
     std::vector<device::ptr> create_device_list_from_user_device(bool out_out_order, void* user_device) const;
 };
 
-}  // namespace gpu
+}  // namespace ocl
 }  // namespace cldnn

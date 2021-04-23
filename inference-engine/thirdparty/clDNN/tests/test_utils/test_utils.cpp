@@ -287,8 +287,13 @@ std::vector<std::shared_ptr<test_params>> generic_test::generate_generic_test_pa
 
 cldnn::engine& get_test_engine() {
     static std::shared_ptr<cldnn::engine> test_engine = nullptr;
-    if (!test_engine)
-        test_engine = cldnn::engine::create(engine_types::ocl, runtime_types::ocl);
+    if (!test_engine) {
+        const bool enable_profiling = false;
+        const cldnn::queue_types queue_type = cldnn::queue_types::out_of_order;
+        std::string sources_dumps_dir = "";
+        engine_configuration config(enable_profiling, queue_type, sources_dumps_dir);
+        test_engine = cldnn::engine::create(engine_types::ocl, runtime_types::ocl, config);
+    }
     return *test_engine;
 }
 

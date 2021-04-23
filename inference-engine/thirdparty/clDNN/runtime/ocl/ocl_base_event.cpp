@@ -11,7 +11,7 @@
 #include <map>
 
 using namespace cldnn;
-using namespace gpu;
+using namespace ocl;
 
 namespace {
 bool is_event_profiled(const cl::Event& event) {

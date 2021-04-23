@@ -11,7 +11,7 @@
 #include <vector>
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 
 gpu_buffer::gpu_buffer(ocl_engine* engine,
                        const layout& layout)
@@ -51,7 +51,7 @@ event::ptr gpu_buffer::fill(stream& stream) {
 event::ptr gpu_buffer::fill(stream& stream, unsigned char pattern) {
     auto& cl_stream = dynamic_cast<ocl_stream&>(stream);
     auto ev = stream.create_base_event();
-    cl::Event ev_ocl = dynamic_cast<base_event*>(ev.get())->get();
+    cl::Event ev_ocl = std::dynamic_pointer_cast<base_event>(ev)->get();
     cl_stream.queue().enqueueFillBuffer<unsigned char>(_buffer, pattern, 0, size(), nullptr, &ev_ocl);
 
     return ev;
@@ -309,5 +309,5 @@ shared_mem_params gpu_usm::get_internal_params() const {
     };
 }
 
-}  // namespace gpu
+}  // namespace ocl
 }  // namespace cldnn

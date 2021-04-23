@@ -9,12 +9,12 @@
 #include <vector>
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 
 std::shared_ptr<kernel> create_ocl_kernel(engine& engine, cl_context context, cl_kernel kernel, std::string entry_point) {
     // Retain kernel to keep it valid
     cl::Kernel k(kernel, true);
-    return std::make_shared<gpu::ocl_kernel>(gpu::kernel_type(k, engine.get_device_info().supports_usm), entry_point);
+    return std::make_shared<ocl::ocl_kernel>(ocl::kernel_type(k, engine.get_device_info().supports_usm), entry_point);
 }
 
 }  // namespace kernels_factory

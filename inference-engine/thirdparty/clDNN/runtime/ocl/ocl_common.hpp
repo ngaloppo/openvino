@@ -12,7 +12,7 @@
 #include <vector>
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 
 typedef cl::vector<cl::vector<unsigned char>> kernels_binaries_vector;
 typedef cl::vector<kernels_binaries_vector> kernels_binaries_container;
@@ -24,12 +24,11 @@ typedef CL_API_ENTRY cl_command_queue(CL_API_CALL* pfn_clCreateCommandQueueWithP
 
 using queue_type = cl::CommandQueueIntel;
 using kernel_type = cl::KernelIntel;
-using kernel_id = std::string;
 
 class ocl_error : public std::runtime_error {
 public:
     explicit ocl_error(cl::Error const& err);
 };
 
-}  // namespace gpu
+}  // namespace ocl
 }  // namespace cldnn

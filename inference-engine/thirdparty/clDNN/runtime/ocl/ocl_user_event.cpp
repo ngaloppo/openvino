@@ -5,7 +5,7 @@
 #include "ocl_user_event.hpp"
 #include <list>
 
-using namespace cldnn::gpu;
+using namespace cldnn::ocl;
 
 void user_event::set_impl() {
     // we simulate "wrapper_cast" here to cast from cl::Event to cl::UserEvent which both wrap the same cl_event

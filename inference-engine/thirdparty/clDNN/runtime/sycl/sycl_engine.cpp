@@ -54,12 +54,12 @@ memory::ptr sycl_engine::allocate_memory(const layout& layout, allocation_type t
 
     if (layout.format.is_image_2d()) {
         throw std::runtime_error("Unsupported alloc type");
-        // return std::make_shared<gpu::gpu_image2d>(this, layout);
+        // return std::make_shared<sycl::gpu_image2d>(this, layout);
     } else if (type == allocation_type::cl_mem) {
         return std::make_shared<sycl::gpu_buffer>(this, layout);
     } else {
         throw std::runtime_error("Unsupported alloc type");
-        // return std::make_shared<gpu::gpu_usm>(this, layout, type);
+        // return std::make_shared<sycl::gpu_usm>(this, layout, type);
     }
 }
 
@@ -75,14 +75,14 @@ memory::ptr sycl_engine::reinterpret_buffer(const memory& memory, const layout& 
 
     if (new_layout.format.is_image_2d()) {
         throw std::runtime_error("Unsupported alloc type in reinterpret_buffer");
-    //    return std::make_shared<gpu::gpu_image2d>(this,
+    //    return std::make_shared<sycl::gpu_image2d>(this,
     //                              new_layout,
-    //                              reinterpret_cast<const gpu::gpu_image2d&>(memory).get_buffer());
+    //                              reinterpret_cast<const sycl::gpu_image2d&>(memory).get_buffer());
     } else if (memory_capabilities::is_usm_type(memory.get_allocation_type())) {
         throw std::runtime_error("Unsupported alloc type in reinterpret_buffer");
-        // return std::make_shared<gpu::gpu_usm>(this,
+        // return std::make_shared<sycl::gpu_usm>(this,
         //                          new_layout,
-        //                          reinterpret_cast<const gpu::gpu_usm&>(memory).get_buffer(),
+        //                          reinterpret_cast<const sycl::gpu_usm&>(memory).get_buffer(),
         //                          memory.get_allocation_type());
     } else {
         return std::make_shared<sycl::gpu_buffer>(this,
@@ -96,16 +96,16 @@ memory::ptr sycl_engine::reinterpret_handle(const layout& new_layout, shared_mem
 //    try {
 //         if (new_layout.format.is_image_2d() && params.mem_type == shared_mem_type::shared_mem_image) {
 //             cl::Image2D img(static_cast<cl_mem>(params.mem), true);
-//             return std::make_shared<gpu::gpu_image2d>(this, new_layout, img);
+//             return std::make_shared<sycl::gpu_image2d>(this, new_layout, img);
 //         } else if (new_layout.format.is_image_2d() && params.mem_type == shared_mem_type::shared_mem_vasurface) {
-//             return std::make_shared<gpu::gpu_media_buffer>(this, new_layout, params);
+//             return std::make_shared<sycl::gpu_media_buffer>(this, new_layout, params);
 // #ifdef _WIN32
 //         } else if (params.mem_type == shared_mem_type::shared_mem_dxbuffer) {
-//             return std::make_shared<gpu::gpu_dx_buffer>(this, new_layout, params);
+//             return std::make_shared<sycl::gpu_dx_buffer>(this, new_layout, params);
 // #endif
 //         } else if (params.mem_type == shared_mem_type::shared_mem_buffer) {
 //             cl::Buffer buf(static_cast<cl_mem>(params.mem), true);
-//             return std::make_shared<gpu::gpu_buffer>(this, new_layout, buf);
+//             return std::make_shared<sycl::gpu_buffer>(this, new_layout, buf);
 //         } else {
 //             throw std::runtime_error("unknown shared object fromat or type");
 //         }
@@ -135,8 +135,8 @@ bool sycl_engine::is_the_same_buffer(const memory& mem1, const memory& mem2) {
         return (reinterpret_cast<const sycl::gpu_buffer&>(mem1).get_buffer() ==
                 reinterpret_cast<const sycl::gpu_buffer&>(mem2).get_buffer());
     // else
-    //     return (reinterpret_cast<const gpu::gpu_usm&>(mem1).get_buffer() ==
-    //             reinterpret_cast<const gpu::gpu_usm&>(mem2).get_buffer());
+    //     return (reinterpret_cast<const sycl::gpu_usm&>(mem1).get_buffer() ==
+    //             reinterpret_cast<const sycl::gpu_usm&>(mem2).get_buffer());
 
     throw std::runtime_error("Unsupported alloc type in is_the_same_buffer");
 }

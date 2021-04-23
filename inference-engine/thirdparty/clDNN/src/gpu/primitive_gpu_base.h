@@ -32,7 +32,7 @@ template <class PType>
 struct typed_primitive_gpu_impl : public typed_primitive_impl<PType> {
     const typed_program_node<PType>& _outer;
     kernel_selector::kernel_data _kernel_data;
-    std::vector<gpu::kernel_id> _kernel_ids;
+    std::vector<kernel_id> _kernel_ids;
     std::vector<kernel::ptr> _kernels;
     std::vector<memory::cptr> _intermediates_memory;
 

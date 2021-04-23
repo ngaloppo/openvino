@@ -29,7 +29,7 @@ struct custom_gpu_primitive_gpu : typed_primitive_impl<custom_gpu_primitive> {
     const custom_gpu_primitive_node& outer;
     std::shared_ptr<kernel_selector::cl_kernel_data> cl_kernel;
     std::vector<kernel::ptr> _kernels;
-    gpu::kernel_id _kernel_id;
+    kernel_id _kernel_id;
 
     std::unique_ptr<primitive_impl> clone() const override {
         return make_unique<custom_gpu_primitive_gpu>(*this);

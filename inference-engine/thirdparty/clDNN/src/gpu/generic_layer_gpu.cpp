@@ -19,7 +19,7 @@ struct generic_layer_gpu : typed_primitive_impl<generic_layer> {
     const generic_layer_node& outer;
     const kernel_selector::cl_kernel_data& _cl_kernel_data;
     std::vector<kernel::ptr> _kernels;
-    gpu::kernel_id _kernel_id;
+    kernel_id _kernel_id;
 
     std::unique_ptr<primitive_impl> clone() const override {
         return make_unique<generic_layer_gpu>(*this);

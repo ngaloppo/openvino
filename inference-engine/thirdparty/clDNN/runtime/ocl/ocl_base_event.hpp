@@ -12,7 +12,7 @@
 #include <list>
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 
 struct profiling_period_ocl_start_stop {
     const char* name;
@@ -123,5 +123,5 @@ private:
     std::vector<event::ptr> _events;
 };
 
-}  // namespace gpu
+}  // namespace ocl
 }  // namespace cldnn

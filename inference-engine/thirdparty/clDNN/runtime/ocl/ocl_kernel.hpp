@@ -13,7 +13,7 @@
 #include <vector>
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 
 class ocl_kernel : public kernel {
     kernel_type _compiled_kernel;
@@ -28,5 +28,5 @@ public:
     std::shared_ptr<kernel> clone() const override { return std::make_shared<ocl_kernel>(get_handle().clone(), _kernel_id); }
 };
 
-}  // namespace gpu
+}  // namespace ocl
 }  // namespace cldnn

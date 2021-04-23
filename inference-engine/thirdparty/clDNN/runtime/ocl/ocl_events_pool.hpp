@@ -10,7 +10,7 @@
 #include <memory>
 
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 
 template <typename Type,
           typename U = typename std::enable_if<meta::is_any_of<Type, base_event, user_event, base_events>::value>::type>
@@ -98,5 +98,5 @@ private:
     user_event_pool _user_pool;
     group_event_pool _group_pool;
 };
-}  // namespace gpu
+}  // namespace ocl
 }  // namespace cldnn

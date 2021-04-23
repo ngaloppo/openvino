@@ -42,7 +42,7 @@ return true;
 }
 }  // namespace
 namespace cldnn {
-namespace gpu {
+namespace ocl {
 static constexpr auto INTEL_PLATFORM_VENDOR = "Intel(R) Corporation";
 
 static std::vector<cl::Device> getSubDevices(cl::Device& rootDevice) {
@@ -236,5 +236,5 @@ std::vector<device::ptr>  ocl_device_detector::create_device_list_from_user_devi
     return ret;
 }
 
-}  // namespace gpu
+}  // namespace ocl
 }  // namespace cldnn

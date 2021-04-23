@@ -239,9 +239,9 @@ void kernels_cache::get_program_source(const kernels_code& kernels_source_code, 
 
 kernels_cache::kernels_cache(engine& engine) : _engine(engine), _build_engine(nullptr) {
     if (_engine.type() == engine_types::ocl) {
-        _build_engine = std::unique_ptr<ocl_engine>(new ocl_engine(_engine.get_device(), runtime_types::ocl, _engine.configuration()));
+        _build_engine = std::unique_ptr<ocl::ocl_engine>(new ocl::ocl_engine(_engine.get_device(), runtime_types::ocl, _engine.configuration()));
     } else {
-        ocl_device_detector detector;
+        ocl::ocl_device_detector detector;
         device::ptr ocl_device;
         auto devices = detector.get_available_devices(nullptr, nullptr);
         if (devices.empty()) {
@@ -251,7 +251,7 @@ kernels_cache::kernels_cache(engine& engine) : _engine(engine), _build_engine(nu
             throw std::runtime_error("L0 backend doesn't support multi-gpu configuration so far as we don't have a mechanism to map OCL <-> L0 devices");
         }
 
-        _build_engine = std::unique_ptr<ocl_engine>(new ocl_engine(devices.begin()->second, runtime_types::ocl, _engine.configuration()));
+        _build_engine = std::unique_ptr<ocl::ocl_engine>(new ocl::ocl_engine(devices.begin()->second, runtime_types::ocl, _engine.configuration()));
     }
 #if (CLDNN_THREADING == CLDNN_THREADING_TBB)
     int n_threads = _engine.configuration().n_threads;
