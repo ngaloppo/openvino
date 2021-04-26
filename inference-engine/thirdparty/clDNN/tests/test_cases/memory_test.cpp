@@ -57,14 +57,16 @@ TEST(memory_tests, DISABLED_network_creation_loop)
 }
 #endif
 TEST(memory_pool, basic_non_padded_relu_pipe) {
-    // 5 relu's of size 1x4x1x1
-    auto& engine = get_test_engine();// here we need new engine
+    // We need a new engine here to get correct get_max_used_device_memory() result
+    // If we reuse common engine, then max memory value will be taken from some previously executed tests
+    // as it's tracked within engine instance
+    auto engine = create_test_engine();
     auto batch_num = 1;
     auto feature_num = 4;
     auto x_size = 1;
     auto y_size = 1;
 
-    auto input = engine.allocate_memory({ data_types::f32, format::bfyx,{ tensor(spatial(x_size, y_size), feature(feature_num), batch(batch_num)) } });
+    auto input = engine->allocate_memory({ data_types::f32, format::bfyx,{ tensor(spatial(x_size, y_size), feature(feature_num), batch(batch_num)) } });
 
     topology topology;
     topology.add(input_layout("input", input->get_layout()));
@@ -80,24 +82,24 @@ TEST(memory_pool, basic_non_padded_relu_pipe) {
     build_options bo;
     bo.set_option(build_option::optimize_data(true));
 
-    network network(engine, topology, bo);
+    network network(*engine, topology, bo);
     network.set_input_data("input", input);
     auto outputs = network.execute();
 
-    EXPECT_EQ(engine.get_max_used_device_memory(), (uint64_t) 64);
+    EXPECT_EQ(engine->get_max_used_device_memory(), (uint64_t) 64);
  }
 
 TEST(memory_pool, basic_non_padded_relu_and_pooling_pipe) {
-    // uncomment this line to disable memory pool
-    /*engine_configuration cfg{ false, false, false, std::string(), std::string(), true, std::string(),std::string(), 0, false };
-    engine engine{ cfg };*/
-    auto& engine = get_test_engine();// here we need new engine
+    // We need a new engine here to get correct get_max_used_device_memory() result
+    // If we reuse common engine, then max memory value will be taken from some previously executed tests
+    // as it's tracked within engine instance
+    auto engine = create_test_engine();
     auto batch_num = 1;
     auto feature_num = 4;
     auto x_size = 4;
     auto y_size = 4;
 
-    auto input = engine.allocate_memory({ data_types::f32, format::bfyx,{ tensor(spatial(x_size, y_size), feature(feature_num), batch(batch_num)) } });
+    auto input = engine->allocate_memory({ data_types::f32, format::bfyx,{ tensor(spatial(x_size, y_size), feature(feature_num), batch(batch_num)) } });
 
     topology topology;
     topology.add(input_layout("input", input->get_layout()));
@@ -112,11 +114,11 @@ TEST(memory_pool, basic_non_padded_relu_and_pooling_pipe) {
     build_options bo;
     bo.set_option(build_option::optimize_data(true));
 
-    network network(engine, topology, bo);
+    network network(*engine, topology, bo);
     network.set_input_data("input", input);
     auto outputs = network.execute();
 
-    EXPECT_EQ(engine.get_max_used_device_memory(), (uint64_t)896);
+    EXPECT_EQ(engine->get_max_used_device_memory(), (uint64_t)896);
 }
 
 TEST(memory_pool, multi_outputs_network) {
@@ -125,13 +127,13 @@ TEST(memory_pool, multi_outputs_network) {
     //            -- relu2 --  relu3 -- relu5--relu6--relu7
     // neither of relu5, relu6 nor relu7 can share resource with relu4.
 
-    auto& engine = get_test_engine();
+    auto engine = create_test_engine();
     auto batch_num = 1;
     auto feature_num = 4;
     auto x_size = 4;
     auto y_size = 4;
 
-    auto input = engine.allocate_memory({ data_types::f32, format::bfyx,{ tensor(spatial(x_size, y_size), feature(feature_num), batch(batch_num)) } });
+    auto input = engine->allocate_memory({ data_types::f32, format::bfyx,{ tensor(spatial(x_size, y_size), feature(feature_num), batch(batch_num)) } });
 
     topology topology;
     topology.add(input_layout("input", input->get_layout()));
@@ -147,11 +149,11 @@ TEST(memory_pool, multi_outputs_network) {
     build_options bo;
     bo.set_option(build_option::optimize_data(true));
 
-    network network(engine, topology, bo);
+    network network(*engine, topology, bo);
     network.set_input_data("input", input);
     auto outputs = network.execute();
 
-    EXPECT_EQ(engine.get_max_used_device_memory(), (uint64_t)1536);
+    EXPECT_EQ(engine->get_max_used_device_memory(), (uint64_t)1536);
 }
 
 TEST(memory_pool, oooq) {
@@ -160,8 +162,10 @@ TEST(memory_pool, oooq) {
                 -- relu3 --  relu5 ---------
        neither of relu5, relu6 nor relu7 can share resource with relu4. */
 
-    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
-    auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
+    // We need a new engine here to get correct get_max_used_device_memory() result
+    // If we reuse common engine, then max memory value will be taken from some previously executed tests
+    // as it's tracked within engine instance
+    auto engine = create_test_engine();
     auto batch_num = 1;
     auto feature_num = 4;
     auto x_size = 4;
@@ -196,8 +200,10 @@ TEST(memory_pool, DISABLED_shared_mem_pool_same_topology_twice) {
                       -- relu3 --  relu5 ---------
     neither of relu5, relu6 nor relu7 can share resource with relu4. */
 
-    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
-    auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
+    // We need a new engine here to get correct get_max_used_device_memory() result
+    // If we reuse common engine, then max memory value will be taken from some previously executed tests
+    // as it's tracked within engine instance
+    auto engine = create_test_engine();
     auto batch_num = 1;
     auto feature_num = 4;
     auto inp_x_size = 4;
@@ -271,8 +277,10 @@ TEST(memory_pool, DISABLED_shared_mem_pool_same_topology_twice) {
 }
 
 TEST(memory_pool, DISABLED_shared_mem_pool_same_topology_twice_weights) {
-    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
-    auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
+    // We need a new engine here to get correct get_max_used_device_memory() result
+    // If we reuse common engine, then max memory value will be taken from some previously executed tests
+    // as it's tracked within engine instance
+    auto engine = create_test_engine();
     auto batch_num = 1;
     auto feature_num = 3;
     auto inp_x_size = 4;
@@ -350,8 +358,10 @@ TEST(memory_pool, DISABLED_shared_mem_pool_same_topology_twice_weights) {
 }
 
 TEST(memory_pool, shared_mem_pool_diff_batches) {
-    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
-    auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
+    // We need a new engine here to get correct get_max_used_device_memory() result
+    // If we reuse common engine, then max memory value will be taken from some previously executed tests
+    // as it's tracked within engine instance
+    auto engine = create_test_engine();
     auto batch_8 = 8;
     auto batch_1 = 1;
     auto feature_num = 3;
@@ -397,8 +407,10 @@ TEST(memory_pool, shared_mem_pool_diff_batches) {
 }
 
 TEST(memory_pool, shared_dep_two_output) {
-    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
-    auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
+    // We need a new engine here to get correct get_max_used_device_memory() result
+    // If we reuse common engine, then max memory value will be taken from some previously executed tests
+    // as it's tracked within engine instance
+    auto engine = create_test_engine();
 
     auto batch_1 = 1;
     auto feature_num = 1;
@@ -441,15 +453,13 @@ TEST(memory_pool, shared_dep_two_output) {
 }
 
 TEST(memory_pool, non_opt_intermidate_opt_after) {
-    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
-    auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
-
+    auto& engine = get_test_engine();
     auto input_layout1 = layout(cldnn::data_types::f32, cldnn::format::bfyx, { 1, 1, 2, 2 });
     auto input_layout2 = layout(cldnn::data_types::f32, cldnn::format::bfyx, { 1, 1, 2, 2 });
 
-    auto input_memory1 = engine->allocate_memory(input_layout1);
-    auto input_memory2 = engine->allocate_memory(input_layout2);
-    auto scale_memory = engine->allocate_memory(layout(cldnn::data_types::f32, cldnn::format::bfyx, { 1,1,1,1 }));
+    auto input_memory1 = engine.allocate_memory(input_layout1);
+    auto input_memory2 = engine.allocate_memory(input_layout2);
+    auto scale_memory = engine.allocate_memory(layout(cldnn::data_types::f32, cldnn::format::bfyx, { 1,1,1,1 }));
     auto data_memory = cldnn::data("scale_mem", scale_memory);
 
     set_values(input_memory1, { 1.0f, 2.0f, 3.0f, 4.0f });
@@ -477,7 +487,7 @@ TEST(memory_pool, non_opt_intermidate_opt_after) {
 
     build_options bo;
     bo.set_option(build_option::optimize_data(false));
-    network network(*engine, topology, bo);
+    network network(engine, topology, bo);
     network.set_input_data("input1", input_memory1);
     network.set_input_data("input2", input_memory2);
     auto outputs = network.execute();
@@ -493,13 +503,12 @@ TEST(memory_pool, non_opt_intermidate_opt_after) {
 }
 
 TEST(memory_pool, add_mem_dep_test) {
-    engine_configuration cfg{ false, queue_types::out_of_order, std::string(), priority_mode_types::disabled, throttle_mode_types::disabled, true /*mem_pool*/ };
-    auto engine = engine::create(engine_types::ocl, runtime_types::ocl, cfg);
+    auto& engine = get_test_engine();
 
     auto input_layout1 = layout(cldnn::data_types::f32, cldnn::format::bfyx, { 1, 2, 2, 2 });
 
-    auto input_memory1 = engine->allocate_memory(input_layout1);
-    auto scale_memory = engine->allocate_memory(layout(cldnn::data_types::f32, cldnn::format::bfyx, { 1,1,1,1 }));
+    auto input_memory1 = engine.allocate_memory(input_layout1);
+    auto scale_memory = engine.allocate_memory(layout(cldnn::data_types::f32, cldnn::format::bfyx, { 1,1,1,1 }));
     auto data_memory = cldnn::data("scale_mem", scale_memory);
 
     set_values(input_memory1, { 1.0f, 2.0f, 3.0f, 4.0f,
@@ -527,7 +536,7 @@ TEST(memory_pool, add_mem_dep_test) {
 
     build_options bo;
     bo.set_option(build_option::optimize_data(true));
-    network network(*engine, topology, bo);
+    network network(engine, topology, bo);
     network.set_input_data("input1", input_memory1);
     auto outputs = network.execute();
     EXPECT_EQ(outputs.size(), static_cast<size_t>(2));

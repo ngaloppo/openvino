@@ -7412,6 +7412,7 @@ TEST_P(convolution_grouped_gpu, base) {
 
     build_options options;
     options.set_option(build_option::optimize_data(true));
+    options.set_option(build_option::outputs({"conv", "out"}));
     implementation_desc conv_impl = {input_data_format, impl_name};
     options.set_option(build_option::force_implementations({{"conv", conv_impl}}));
 

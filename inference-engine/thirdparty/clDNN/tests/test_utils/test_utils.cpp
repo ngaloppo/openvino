@@ -285,14 +285,22 @@ std::vector<std::shared_ptr<test_params>> generic_test::generate_generic_test_pa
     return all_generic_params;
 }
 
+cldnn::engine_configuration get_test_engine_config() {
+    const bool enable_profiling = false;
+    const cldnn::queue_types queue_type = cldnn::queue_types::out_of_order;
+    std::string sources_dumps_dir = "";
+    return engine_configuration(enable_profiling, queue_type, sources_dumps_dir);
+}
+
+
+std::shared_ptr<cldnn::engine> create_test_engine() {
+    return cldnn::engine::create(engine_types::ocl, runtime_types::ocl, get_test_engine_config());
+}
+
 cldnn::engine& get_test_engine() {
     static std::shared_ptr<cldnn::engine> test_engine = nullptr;
     if (!test_engine) {
-        const bool enable_profiling = false;
-        const cldnn::queue_types queue_type = cldnn::queue_types::out_of_order;
-        std::string sources_dumps_dir = "";
-        engine_configuration config(enable_profiling, queue_type, sources_dumps_dir);
-        test_engine = cldnn::engine::create(engine_types::ocl, runtime_types::ocl, config);
+        test_engine = cldnn::engine::create(engine_types::ocl, runtime_types::ocl, get_test_engine_config());
     }
     return *test_engine;
 }

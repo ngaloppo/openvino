@@ -44,6 +44,7 @@
 
 namespace tests {
 
+std::shared_ptr<cldnn::engine> create_test_engine();
 cldnn::engine& get_test_engine();
 const cldnn::stream& get_test_stream();
 
