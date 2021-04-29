@@ -81,3 +81,8 @@ multi_inference_experimental:
 # Following example executes a HOST_TO_DEVICE copy of 1 MB and DEVICE_TO_HOST copy of 4 KB in parallel
 multi_copy_experimental:
   copy_stream_list:  [ [ 0, 1048576 ], [ 1, 4096 ] ]
+
+
+#openvino based surface_use_case
+surface_use_case:
+  blob_stream_list:  [ [ [ mobilenetv2.blob ], 0, 100 ], [ [ resnet50.blob ], 30, 50 ] ]

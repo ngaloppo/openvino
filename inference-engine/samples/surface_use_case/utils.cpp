@@ -9,7 +9,7 @@
 #include <map>
 #include <regex>
 #include <iostream>
-
+#include <fstream>
 #include <samples/common.hpp>
 #include <samples/slog.hpp>
 
@@ -201,3 +201,59 @@ void load_config(const std::string& filename,
     }
 }
 #endif
+
+std::vector<blob_stream_t> parseblobstream( const std::string& blob_path )
+{
+        
+    std::vector< blob_stream_t > blob_pipe;        
+    std::string current_pipe;
+    std::string temp_substr;
+    uint32_t pipeline = 0;
+    uint32_t start = 0;
+    uint32_t end = 0;
+    uint32_t model = 0;
+
+    std::string model_path = blob_path;
+    std::ifstream surface_pipe( model_path, std::ios::in );
+    std::string blob_list( (std::istreambuf_iterator<char>( surface_pipe )), (std::istreambuf_iterator<char>()) );
+    blob_list.erase( std::remove_if( blob_list.begin(), blob_list.end(), ::isspace ), blob_list.end() );
+
+    while( blob_list.find( ";" ) != std::string::npos ){
+
+        end = blob_list.find( ";" );
+        current_pipe = blob_list.substr( blob_list.find( "[" ) , end );
+        blob_list = blob_list.substr( end + 1 );         
+        
+        while( !current_pipe.empty() ){
+
+            blob_pipe.emplace_back( blob_stream_t() );
+            temp_substr = current_pipe.substr( current_pipe.find( "[" ), current_pipe.find( "]" ) + 1 );
+
+            start = temp_substr.find( "[" ) + 1;
+            end = temp_substr.find( "," );
+            blob_pipe[model]._blob = temp_substr.substr( start, end - 1 );
+            temp_substr = temp_substr.substr( end + 1 );
+
+            //TBD for processing all elements within a pipe.
+
+            start = 0;
+            end = temp_substr.find( "," );
+            blob_pipe[model]._target_fps = std::stoi( temp_substr.substr( start, end ) );
+            temp_substr = temp_substr.substr( end + 1 );
+
+            start = 0;
+            end = temp_substr.find( "]" );
+            blob_pipe[model]._iteration_count = std::stoi( temp_substr.substr( start, end ) );
+
+            blob_pipe[model].pipeline = pipeline;
+
+            current_pipe = current_pipe.substr( current_pipe.find( "]" ) + 1 );
+
+            model++;
+        }
+
+        pipeline++;
+    }    
+    
+    return blob_pipe;
+}

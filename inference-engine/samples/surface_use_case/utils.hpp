@@ -128,3 +128,19 @@ void dump_config(const std::string& filename,
 void load_config(const std::string& filename,
                  std::map<std::string, std::map<std::string, std::string>>& config);
 #endif
+
+struct blob_stream_t
+{
+    std::string _blob;
+    uint32_t _target_fps = 0;
+    uint32_t _iteration_count = 0;
+    uint32_t pipeline = 0;
+
+    ///////////////////////////////////////////////////////////////////////
+    /*bool operator==( const blob_stream_t& rhs )
+    {
+        return _blob == rhs._blob && _target_fps == rhs._target_fps &&
+            _iteration_count && rhs._iteration_count;
+    }*/
+};
+std::vector<blob_stream_t> parseblobstream( const std::string& blob_string );

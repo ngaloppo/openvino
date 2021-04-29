@@ -204,7 +204,7 @@ void fillBlobImInfo(Blob::Ptr& inputBlob,
 
 void fillBlobs(const std::vector<std::string>& inputFiles,
                const size_t& batchSize,
-               benchmark_app::InputsInfo& app_inputs_info,
+               benchmark_app::InputsInfo& app_inputs_info,               
                std::vector<InferReqWrap::Ptr> requests) {
     std::vector<std::pair<size_t, size_t>> input_image_sizes;
     for (auto& item : app_inputs_info) {

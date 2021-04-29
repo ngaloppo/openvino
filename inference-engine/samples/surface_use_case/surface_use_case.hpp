@@ -92,6 +92,9 @@ static const char progress_message[] = "Optional. Show progress bar (can affect 
 // @brief message for performance counters option
 static const char pc_message[] = "Optional. Report performance counters.";
 
+// @brief message for performance counters option
+static const char blob_stream_message[] = "Required. For surface_use_case test";
+
 #ifdef USE_OPENCV
 // @brief message for load config option
 static const char load_config_message[] = "Optional. Path to XML/YAML/JSON file to load custom IE parameters."
@@ -195,6 +198,8 @@ DEFINE_bool(progress, false, progress_message);
 /// @brief Define flag for showing performance counters <br>
 DEFINE_bool(pc, false, pc_message);
 
+DEFINE_string(blob_stream, "", blob_stream_message);
+
 #ifdef USE_OPENCV
 /// @brief Define flag for loading configuration file <br>
 DEFINE_string(load_config, "", load_config_message);
@@ -258,6 +263,7 @@ static void showUsage() {
     std::cout << "    -report_folder            " << report_folder_message << std::endl;
     std::cout << "    -exec_graph_path          " << exec_graph_path_message << std::endl;
     std::cout << "    -pc                       " << pc_message << std::endl;
+    std::cout << "    -blob_stream  \"<path>\"  " << blob_stream_message << std::endl;
 #ifdef USE_OPENCV
     std::cout << "    -dump_config              " << dump_config_message << std::endl;
     std::cout << "    -load_config              " << load_config_message << std::endl;

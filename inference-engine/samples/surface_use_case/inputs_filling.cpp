@@ -206,6 +206,7 @@ void fillBlobs(const std::vector<std::string>& inputFiles,
                const size_t& batchSize,
                surface_use_case::InputsInfo& app_inputs_info,
                std::vector<InferReqWrap::Ptr> requests) {
+               //InferRequest requests) {
     std::vector<std::pair<size_t, size_t>> input_image_sizes;
     for (auto& item : app_inputs_info) {
         if (item.second.isImage()) {
