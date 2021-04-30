@@ -73,8 +73,30 @@ void fillBlobRandom( Blob::Ptr& inputBlob,
     }
 }
 
-std::string model_path = "D:\\work\\models\\";
-std::vector<std::string> pipe_string = { "mobilenetv2.xml,30,100" , "mobilenetv2.xml,resnet50.xml,30,100" };
+template< typename T >
+struct timer_t
+{
+    using clock_t = std::chrono::high_resolution_clock;
+    using time_point_t = std::chrono::high_resolution_clock::time_point;
+    using duration_t = std::chrono::duration< T >;
+
+    ///////////////////////////////////////////////////////////////////////
+    inline void Start() { _start = clock_t::now(); }
+
+    ///////////////////////////////////////////////////////////////////////
+    inline void Stop()
+    {
+        _elapsed_time =
+            static_cast<duration_t>(clock_t::now() - _start).count();
+    }
+
+    ///////////////////////////////////////////////////////////////////////
+    inline T GetElapsedTime() const { return _elapsed_time; }
+
+private:
+    T _elapsed_time{};
+    time_point_t _start;
+};
 
 struct pipeline_infer
 {
@@ -87,6 +109,32 @@ struct pipeline_infer
     //InferRequestsQueue inferRequestsQueue( exeNetwork, nireq );
     std::vector<surface_use_case::InputsInfo> app_inputs_info;
 
+    typedef typename timer_t< double > timer_t;
+    timer_t _setup_timer;
+    timer_t _throughput_timer;
+    std::vector< timer_t > _latency_timer;     
+
+    void StartTimer( timer_t& timer ) { timer.Start(); }
+
+    ///////////////////////////////////////////////////////////////////////////
+    void StopTimer( timer_t& timer )
+    {
+        timer.Stop();
+        ;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    double GetElapsedTimeInMillisecs( timer_t& timer )
+    {
+        return timer.GetElapsedTime() * 1000.f;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    double GetElapsedTimeInSecs( timer_t& timer )
+    {
+        return timer.GetElapsedTime();
+    }
+
     //std::vector< std::unique_ptr< pipeline_infer > > _inference_pipe;
         
 
@@ -98,17 +146,17 @@ struct pipeline_infer
         // Schedule the inferences
         while( _current_iteration < blob_stream_list[0]._iteration_count )
         {
-            //_fixture.StartTimer( _latency_timer[_current_iteration] );
-            uint32_t counter = 0;
+            StartTimer( _latency_timer[_current_iteration] );
+            //uint32_t counter = 0;
             for( auto& inference : infer_request )
             {
-                std::cout << "Blob stream: " << blob_stream_list[counter]._blob << std::endl;
+                //std::cout << "Blob stream: " << blob_stream_list[counter]._blob << std::endl;
                 inference.Infer();
-                counter++;
+                //counter++;
                 //inference->Readback( _current_iteration );
             }
 
-            //_fixture.StopTimer( _latency_timer[_current_iteration] );
+            StopTimer( _latency_timer[_current_iteration] );
 
             _current_iteration++;
         }
@@ -116,7 +164,7 @@ struct pipeline_infer
 
     void Execute( void )
     {
-        //_fixture.StartTimer( _throughput_timer );
+        StartTimer( _throughput_timer );
 
         _thread = std::thread( [&]() { ExecuteThread(); } );
     }
@@ -126,43 +174,16 @@ struct pipeline_infer
     {
         _thread.join();
 
-        //_fixture.StopTimer( _throughput_timer );
+        StopTimer( _throughput_timer );
     };
 
     ///////////////////////////////////////////////////////////////////////
-    //bool Run( void )
-    //{
-    //    bool result = true;
-
-    //    try
-    //    {
-    //        // Schedule the inference streams
-    //        for( auto& _inference_stream : _inference_pipe )
-    //        {
-    //            _inference_stream->Execute();
-    //        }
-
-    //        // Wait for them to complete
-    //        std::vector< std::thread > threads;
-    //        for( auto& _inference_stream : _inference_pipe )
-    //        {
-    //            threads.emplace_back( std::thread(
-    //                [&]() { _inference_stream->WaitForCompletion(); } ) );
-    //        }
-    //        for( auto& thread : threads )
-    //        {
-    //            thread.join();
-    //        }
-    //    }
-    //    catch( ... )
-    //    {
-    //        result = false;
-    //    }
-
-    //    return result;
-    //}
+      
 };
 
+std::string model_path = "D:\\work\\models\\";
+std::vector<std::string> pipe_string = { "mobilenetv2.blob,30,100" , "mobilenetv2.blob,resnet50.blob,30,100" };
+std::vector<pipeline_infer> pipe_stream( pipe_string.size() );
 
 
 bool ParseAndCheckCommandLine(int argc, char *argv[]) {
@@ -337,6 +358,7 @@ int main(int argc, char *argv[]) {
 
         slog::info << "InferenceEngine: " << GetInferenceEngineVersion() << slog::endl;
         slog::info << "Device info: " << slog::endl;
+        //VPUX is not yet registered, so commenting for now
         std::cout << ie.GetVersions( device_name ) << std::endl;
 
         // ----------------- 3. Setting device configuration -----------------------------------------------------------
@@ -511,16 +533,13 @@ int main(int argc, char *argv[]) {
         //Parse blob_stream
         //Blob stream includes 3 items:
         // actual blob used(IRv10 for CPU and *.blob for VPU), target FPS and number of iterations to run. 
-
-        uint32_t num_pipes = 2;
-        std::vector<pipeline_infer> pipe_stream;
-
+                
         
-
+        
         for(int i=0; i< pipe_string.size(); i++ ){
             std::stringstream parse_vector( pipe_string[i] );
             uint32_t num_blobs = 0, fps_done=0;
-            pipe_stream.emplace_back( pipeline_infer() );
+            //pipe_stream.emplace_back( pipeline_infer() );
             while( parse_vector.good() )
             {
                 std::string substr;
@@ -528,6 +547,10 @@ int main(int argc, char *argv[]) {
                 pipe_stream[i].blob_stream_list.emplace_back( blob_stream_t() );
                 if( std::isdigit( substr.at(0) ) == 0 )
                 {
+                    if( substr.find( ".blob" ) != std::string::npos )
+                    {
+                        isNetworkCompiled = true;
+                    }
                     pipe_stream[i].blob_stream_list[num_blobs]._blob = model_path + substr;
                     num_blobs++;
                 }
@@ -549,59 +572,11 @@ int main(int argc, char *argv[]) {
                     
                 }
                                 
-            }
-
+            }           
             
+        }                  
 
-            
-            
-        }
-
-        //pipe_stream.blob_stream_list = parseblobstream( FLAGS_blob_stream );
-
-        //
-        /*std::vector< std::string > all_blobs;
-        std::string model_path = "D:\\work\\models\\";
-        for( int i = 0; i < pipe_stream.blob_stream_list.size(); i++ )
-        {
-            all_blobs.emplace_back( std::string() );
-            all_blobs[i] = model_path + blob_stream_list[i]._blob;
-        }*/
-
-        size_t batchSize = FLAGS_b;
-        Precision precision = Precision::UNSPECIFIED;
-        std::string topology_name = "";
-        //surface_use_case::InputsInfo app_inputs_info;
-        std::string output_name;
-
-        // Number of requests
-        uint32_t nireq = FLAGS_nireq;
-        if( nireq == 0 )
-        {
-            if( FLAGS_api == "sync" )
-            {
-                nireq = 1;
-            }
-            else
-            {
-                /*std::string key = METRIC_KEY( OPTIMAL_NUMBER_OF_INFER_REQUESTS );
-                try
-                {
-                    nireq = exeNetwork.GetMetric( key ).as<unsigned int>();
-                }
-                catch( const std::exception& ex )
-                {
-                    IE_THROW()
-                        << "Every device used with the surface_use_case should "
-                        << "support OPTIMAL_NUMBER_OF_INFER_REQUESTS ExecutableNetwork metric. "
-                        << "Failed to query the metric for the " << device_name << " with error:" << ex.what();
-                }*/
-            }
-        }
-
-                 
-
-        if( !isNetworkCompiled )
+        if( 1 )
         {
             // ----------------- 4. Reading the Intermediate Representation network ----------------------------------------
             next_step();
@@ -620,55 +595,71 @@ int main(int argc, char *argv[]) {
                     pipe_stream[i].exec_network.emplace_back( ExecutableNetwork() );
                     pipe_stream[i].infer_request.emplace_back( InferRequest() );
 
-                    pipe_stream[i].app_inputs_info.emplace_back( surface_use_case::InputsInfo() );
-                    //auto startTime = Time::now();
-                    pipe_stream[i].cnn_network_pipe[j] = ie.ReadNetwork( pipe_stream[i].blob_stream_list[j]._blob );
+                    pipe_stream[i].app_inputs_info.emplace_back( surface_use_case::InputsInfo() );                  
 
-                    //////////////////////////////////////////////////
-                    const InputsDataMap inputInfo( pipe_stream[i].cnn_network_pipe[j].getInputsInfo() );
-                    bool reshape = false;
-                    pipe_stream[i].app_inputs_info[j] = getInputsInfo<InputInfo::Ptr>( FLAGS_shape, FLAGS_layout, FLAGS_b, inputInfo, reshape );
-                    if( reshape )
+                    //setup latency timer for all iterations:
+                    uint32_t iter_count = 0;
+                    while( iter_count < pipe_stream[i].blob_stream_list[j]._iteration_count )
                     {
-                        InferenceEngine::ICNNNetwork::InputShapes shapes = {};
-                        for( auto& item : pipe_stream[i].app_inputs_info[j] )
-                            shapes[item.first] = item.second.shape;
-                        slog::info << "Reshaping network: " << getShapesString( shapes ) << slog::endl;
-                        auto startTime = Time::now();
-                        pipe_stream[i].cnn_network_pipe[j].reshape( shapes );
-                        auto duration_ms = double_to_string( get_total_ms_time( startTime ) );
-                        slog::info << "Reshape network took " << duration_ms << " ms" << slog::endl;
-                        if( statistics )
-                            statistics->addParameters( StatisticsReport::Category::EXECUTION_RESULTS,
-                                {
-                                        {"reshape network time (ms)", duration_ms}
-                                } );
+                        pipe_stream[i]._latency_timer.emplace_back( pipeline_infer::timer_t() );
+                        iter_count++;
                     }
-
-                    /////////////////////////////////////////////////////
-
-                    processPrecision( pipe_stream[i].cnn_network_pipe[j], FLAGS_ip, FLAGS_op, FLAGS_iop );
-                    for( auto& item : pipe_stream[i].cnn_network_pipe[j].getInputsInfo() )
+                    std::string input_name;
+                    
+                    if( !isNetworkCompiled )
                     {
-                        // if precision for input set by user, then set it to app_inputs
-                        // if it an image, set U8
-                        if( !FLAGS_ip.empty() || FLAGS_iop.find( item.first ) != std::string::npos )
+                        //////////////////////////////////////////////////
+                        pipe_stream[i].cnn_network_pipe[j] = ie.ReadNetwork( pipe_stream[i].blob_stream_list[j]._blob );
+                        bool reshape = false;
+                        const InputsDataMap inputInfo( pipe_stream[i].cnn_network_pipe[j].getInputsInfo() );
+                        pipe_stream[i].app_inputs_info[j] = getInputsInfo<InputInfo::Ptr>( FLAGS_shape, FLAGS_layout, FLAGS_b, inputInfo, reshape );
+                        if( reshape )
                         {
-                            pipe_stream[i].app_inputs_info[j].at( item.first ).precision = item.second->getPrecision();
+                            InferenceEngine::ICNNNetwork::InputShapes shapes = {};
+                            for( auto& item : pipe_stream[i].app_inputs_info[j] )
+                                shapes[item.first] = item.second.shape;
+                            slog::info << "Reshaping network: " << getShapesString( shapes ) << slog::endl;
+                            auto startTime = Time::now();
+                            pipe_stream[i].cnn_network_pipe[j].reshape( shapes );
+                            auto duration_ms = double_to_string( get_total_ms_time( startTime ) );
+                            slog::info << "Reshape network took " << duration_ms << " ms" << slog::endl;
+                            if( statistics )
+                                statistics->addParameters( StatisticsReport::Category::EXECUTION_RESULTS,
+                                    {
+                                            {"reshape network time (ms)", duration_ms}
+                                    } );
                         }
-                        else if( pipe_stream[i].app_inputs_info[j].at( item.first ).isImage() )
-                        {
-                            pipe_stream[i].app_inputs_info[j].at( item.first ).precision = Precision::U8;
-                            item.second->setPrecision( pipe_stream[i].app_inputs_info[j].at( item.first ).precision );
-                        }
-                    }
 
-                    printInputAndOutputsInfo( pipe_stream[i].cnn_network_pipe[j] );
-                    // ----------------- 7. Loading the model to the device --------------------------------------------------------
-                    next_step();
-                    //startTime = Time::now();
-                    std::string input_name = pipe_stream[i].cnn_network_pipe[j].getInputsInfo().begin()->first;
-                    pipe_stream[i].exec_network[j] = ie.LoadNetwork( pipe_stream[i].cnn_network_pipe[j], device_name );
+                        /////////////////////////////////////////////////////
+
+                        processPrecision( pipe_stream[i].cnn_network_pipe[j], FLAGS_ip, FLAGS_op, FLAGS_iop );
+                        for( auto& item : pipe_stream[i].cnn_network_pipe[j].getInputsInfo() )
+                        {
+                            // if precision for input set by user, then set it to app_inputs
+                            // if it an image, set U8
+                            if( !FLAGS_ip.empty() || FLAGS_iop.find( item.first ) != std::string::npos )
+                            {
+                                pipe_stream[i].app_inputs_info[j].at( item.first ).precision = item.second->getPrecision();
+                            }
+                            else if( pipe_stream[i].app_inputs_info[j].at( item.first ).isImage() )
+                            {
+                                pipe_stream[i].app_inputs_info[j].at( item.first ).precision = Precision::U8;
+                                item.second->setPrecision( pipe_stream[i].app_inputs_info[j].at( item.first ).precision );
+                            }
+                        }
+
+                        printInputAndOutputsInfo( pipe_stream[i].cnn_network_pipe[j] );
+                        // ----------------- 7. Loading the model to the device --------------------------------------------------------
+                        next_step();
+                        //startTime = Time::now();
+                        input_name = pipe_stream[i].cnn_network_pipe[j].getInputsInfo().begin()->first;
+                        pipe_stream[i].exec_network[j] = ie.LoadNetwork( pipe_stream[i].cnn_network_pipe[j], device_name );
+                    }
+                    else
+                    {
+                        pipe_stream[i].exec_network[j] = ie.ImportNetwork( FLAGS_m, device_name, {} );
+                        pipe_stream[i].app_inputs_info[j] = getInputsInfo<InputInfo::CPtr>( FLAGS_shape, FLAGS_layout, FLAGS_b, pipe_stream[i].exec_network[j].GetInputsInfo() );
+                    }                               
 
                     pipe_stream[i].infer_request[j] = pipe_stream[i].exec_network[j].CreateInferRequest();
 
@@ -730,27 +721,19 @@ int main(int argc, char *argv[]) {
 
                     pipe_stream[i].infer_request[j].SetBlob( input_name, inputBlob );
                 }
-
-
-                //Blob::Ptr inputBlob = infer_request[i].SetBlob(); 
-                //InferRequestsQueue tmp_inferrequestqueue( exec_network[i], nireq );
-                //infer_request_queue[i] = std::make_unique< InferRequestsQueue >( exec_network[i], nireq );
-                
-                //fillBlobs( inputFiles, batchSize = 1, app_inputs_info[i], infer_request[i]);
-            }
-            
+            }            
 
         }
 
         // --------------------------- Step 7. Do inference --------------------------------------------------------
         /* Running the pipelines via multiple threads */
-        
-        for( int i = 0; i < pipe_string.size(); i++ )
-        {
-            //_inference_pipe = pipe_stream[i]._inference_pipe;
-            pipe_stream[i].Execute();
-            std::cout << "Pipe Number: " << i << std::endl;
 
+        auto startTime = Time::now();
+
+        for( int i = 0; i < pipe_string.size(); i++ )
+        {            
+            pipe_stream[i].Execute();
+            //std::cout << "Pipe Number: " << i << std::endl;
         }
 
         // Wait for them to complete
@@ -764,10 +747,42 @@ int main(int argc, char *argv[]) {
         {
             thread.join();
         }
-                
-        std::cout << "Execution Complete" << std::endl;
+
+        for( size_t index = 0; index < pipe_stream.size();
+            ++index )
+        {
+            using timer_t = pipeline_infer::timer_t;
+            auto& throughput_timer = pipe_stream[index]._throughput_timer;
+            auto& iteration_count = pipe_stream[index].blob_stream_list[0]._iteration_count;
+            double throughput =
+                1000.0 * iteration_count /
+                pipe_stream[index].GetElapsedTimeInMillisecs( throughput_timer );
+
+            auto& latency_timer = pipe_stream[index]._latency_timer;
+            double latency = std::accumulate(
+                latency_timer.begin(),
+                latency_timer.end(),
+                0.0,
+                [&]( double mean, timer_t& timer )
+            {
+                return mean +
+                    pipe_stream[index].GetElapsedTimeInMillisecs( timer ) /
+                    latency_timer.size();
+            } );
+
+            std::cerr << "[ INFO     ] "
+                << "stream-" << index
+                //<< ": setup time: " << setup_time
+                << " Throughput: " << throughput << " FPS"
+                << ", latency: " << latency << " ms" << std::endl;
+        }       
+
+        auto duration_ms = double_to_string( get_total_ms_time( startTime ) );
+
+        std::cout << "Execution Complete: Total time for entire pipeline: " << duration_ms << " ms" << std::endl;
         // -----------------------------------------------------------------------------------------------------
 
+        std::cout << "Surface Use Case" << std::endl;
         
 
 
