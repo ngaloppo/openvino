@@ -81,6 +81,12 @@
 #include "cldnn_itt.h"
 #include "gpu/gpu_config.hpp"
 
+#include "ie_iextension.h"
+#include "cldnn_extensions.h"
+
+#include <ngraph/op/clamp.hpp>
+
+
 #include "cldnn/runtime/device_query.hpp"
 
 #ifdef __linux__
@@ -95,6 +101,52 @@
 using namespace InferenceEngine;
 using namespace InferenceEngine::gpu;
 using namespace InferenceEngine::details;
+
+class ClampOCL : public InferenceEngine::ILayerImplOCL {
+public:
+    ClampOCL(const std::shared_ptr<ngraph::Node>& op) : InferenceEngine::ILayerImplOCL(op) {}
+
+    std::string getKernelTemplate() const override {
+        std::string kernel =
+            "__kernel void customKernel(const __global INPUT0_TYPE* in0, __global OUTPUT0_TYPE* out) {"
+            "const int x = get_global_id(0);"
+            "out[x] = min(max((INPUT0_TYPE)CLAMP_MIN, in0[x]), (INPUT0_TYPE)CLAMP_MAX);"
+            "}";
+
+        return kernel;
+    }
+
+    RuntimeInfo getRuntimeInfo() const override {
+        std::vector<size_t> gws = {op->get_output_tensor(0).size() / op->get_output_tensor(0).get_element_type().size(),1,1};
+        std::vector<size_t> lws = {1,1,1};
+        std::string kernelName = "customKernel";
+        std::string buildOptions = "";
+
+        std::vector<ArgumentDesciptor::Ptr> arguments;
+
+        auto inShape = op->get_input_shape(0);
+        DataConfig cfg;
+        cfg.desc = InferenceEngine::TensorDesc(InferenceEngine::Precision::FP32, InferenceEngine::Layout::NCHW);
+        cfg.inPlace = -1;
+        cfg.constant = false;
+
+        arguments.push_back(std::make_shared<InputTensor>(0, std::vector<DataConfig>{cfg}));
+        arguments.push_back(std::make_shared<OutputTensor>(0, std::vector<DataConfig>{cfg}));
+
+        return {gws, lws, kernelName, buildOptions, arguments};
+    }
+
+    std::vector<JitConstant> getJitConstants() const override {
+        auto casted = std::dynamic_pointer_cast<ngraph::opset3::Clamp>(op);
+        JitConstant min{"CLAMP_MIN", std::to_string(casted->get_min())};
+        JitConstant max{"CLAMP_MAX", std::to_string(casted->get_max())};
+        return {min, max};
+    };
+
+    std::vector<std::string> getCompatibleDevices() const override {
+        return {"GPU"};
+    }
+};
 
 namespace CLDNNPlugin {
 
@@ -475,6 +527,12 @@ clDNNEngine::clDNNEngine() : m_defaultContext(nullptr) {
     }
     config_path += "/cldnn_global_custom_kernels/cldnn_global_custom_kernels.xml";
     CLDNNCustomLayer::LoadFromFile(config_path, _impl->m_config.customLayers, true);
+
+    m_extensionManager = std::make_shared<GPUExtensionManager>();
+
+    auto ext = std::make_shared<Extensions::Gpu::GPUExtensions>();
+    ext->RegisterExtensionLayer<ClampOCL>("Clamp");
+    m_extensionManager->AddExtension(ext);
 }
 
 auto check_inputs = [](InferenceEngine::InputsDataMap _networkInputs) {
@@ -552,7 +610,7 @@ IExecutableNetworkInternal::Ptr clDNNEngine::LoadExeNetworkImpl(const InferenceE
     auto transformedNetwork = CloneAndTransformNetwork(network, conf);
     {
         OV_ITT_SCOPED_TASK(itt::domains::CLDNNPlugin, "clDNNEngine::LoadExeNetworkImpl::CreateExeNetwork");
-        return std::make_shared<CLDNNExecNetwork>(transformedNetwork, context, conf);
+    	return std::make_shared<CLDNNExecNetwork>(transformedNetwork, context, conf, m_extensionManager);
     }
 }
 
@@ -571,7 +629,7 @@ IExecutableNetworkInternal::Ptr clDNNEngine::LoadExeNetworkImpl(const InferenceE
     UpdateConfig(conf, network, config);
 
     auto transformedNetwork = CloneAndTransformNetwork(network, conf);
-    return std::make_shared<CLDNNExecNetwork>(transformedNetwork, casted, conf);
+    return std::make_shared<CLDNNExecNetwork>(transformedNetwork, casted, conf, m_extensionManager);
 }
 
 RemoteContext::Ptr clDNNEngine::CreateContext(const ParamMap& params) {
@@ -977,6 +1035,10 @@ Parameter clDNNEngine::GetMetric(const std::string& name, const std::map<std::st
     } else {
         IE_THROW() << "Unsupported metric key " << name;
     }
+}
+
+void clDNNEngine::AddExtension(InferenceEngine::IExtensionPtr extension) {
+    m_extensionManager->AddExtension(extension);
 }
 
 };  // namespace CLDNNPlugin
