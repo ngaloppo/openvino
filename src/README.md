@@ -68,5 +68,5 @@ OpenVINO provides bindings for several languages:
  * [Performance](#todo)
 
 ## See also
- * [OpenVINO™ README](../../README.md)
- * [Developer documentation](../../docs/dev/index.md)
+ * [OpenVINO™ README](../README.md)
+ * [Developer documentation](../docs/dev/index.md)
